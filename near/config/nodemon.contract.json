@@ -1,0 +1,22 @@
+{
+  "nodemonConfig": {
+    "restartable": ".",
+    "ignore": [
+      "docs/*",
+      ".git",
+      "node_modules/**/node_modules"
+    ],
+    "verbose": true,
+    "events": {
+      "restart": "osascript -e 'display notification \"CONTRACT restarted\"'"
+    },
+    "watch": [
+      "contract",
+      "near"
+    ],
+    "env": {
+      "NODE_ENV": "development"
+    },
+    "ext": "json, ts, js"
+  }
+}
