@@ -26,19 +26,13 @@ import { u128, PersistentDeque, logging } from "near-sdk-as";
  *
  */
 export class TransferEvent {
-
-  constructor(spender: string, from: string, to: string, value: u128) {
-    this.spender = spender;
-    this.from = from;
-    this.to = to;
-    this.value = value;
-  }
-
-  spender: string;
-  from: string;
-  to: string;
-  value: u128;
+  constructor(
+    public spender: string,
+    public from: string,
+    public to: string,
+    public value: u128) {}
 }
+
 
 /**
  * originall defined in https://eips.ethereum.org/EIPS/eip-20 as
@@ -55,17 +49,11 @@ export class TransferEvent {
  *
  */
 export class ApprovalEvent {
-  constructor(owner: string, spender: string, oldValue: u128, value: u128) {
-    this.owner = owner;
-    this.spender = spender;
-    this.oldValue = oldValue;
-    this.value = value;
-  }
-
-  owner: string;
-  spender: string;
-  oldValue: u128;
-  value: u128;
+  constructor(
+    public owner: string,
+    public spender: string,
+    public oldValue: u128,
+    public value: u128) {}
 }
 
 

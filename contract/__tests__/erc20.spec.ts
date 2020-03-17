@@ -1,5 +1,4 @@
-import { u128 } from "near-sdk-as";
-import { VM, Context as VMContext } from "wasm-mock-vm";
+import { u128, VM, Context as VMContext } from "near-sdk-as";
 import {
   name, symbol, decimals,
   totalSupply, initialize, balanceOf, transfer,
@@ -101,8 +100,8 @@ describe("ERC-20 Token (steady state) ", () => {
       transfer(bob, amount);
 
       // respective balances should reflect the change
-      expect(balanceOf(alice)).toBe(aliceStart - amount);
-      expect(balanceOf(bob)).toBe(bobStart + amount);
+      expect(balanceOf(alice)).toBe(u128.sub(aliceStart, amount));
+      expect(balanceOf(bob)).toBe(u128.add(bobStart, amount));
 
       // test that a transfer event was recorded
       // log(getNewestTransferEvent())
@@ -244,8 +243,8 @@ describe("ERC-20 Token (steady state) ", () => {
 
       transferFrom(alice, carol, transferredAmount);
 
-      expect(balanceOf(alice)).toBe(aliceBefore - transferredAmount)
-      expect(balanceOf(carol)).toBe(carolBefore + transferredAmount)
+      expect(balanceOf(alice)).toBe(u128.sub(aliceBefore, transferredAmount))
+      expect(balanceOf(carol)).toBe(u128.add(carolBefore, transferredAmount))
 
       // test that a transfer event was recorded
       // log(getNewestTransferEvent())

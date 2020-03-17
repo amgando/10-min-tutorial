@@ -9,7 +9,6 @@ import { u128, context, logging, PersistentMap } from "near-sdk-as";
 
 import { recordTransferEvent, recordApprovalEvent } from "./events";
 
-
 // ----------------------------------------------------------------------------
 // BOOK KEEPING
 // ----------------------------------------------------------------------------
@@ -157,8 +156,8 @@ export function transfer(to: string, value: u128): boolean {
   assert(senderBalance >= value, "Sender has insufficient funds for transfer");
 
   // move tokens among accounts
-  balances.set(sender, senderBalance - value);
-  balances.set(recipient, recipientBalance + value);
+  balances.set(sender, u128.sub(senderBalance, value));
+  balances.set(recipient, u128.add(recipientBalance, value));
 
   // record the transfer event
   let spender = sender;
@@ -208,8 +207,8 @@ export function transferFrom(from: string, to: string, value: u128): boolean {
   assert(fromBalance >= value, "From account has insufficient funds for transfer");
 
   // move tokens among accounts
-  balances.set(from, fromBalance - value);
-  balances.set(to, recipientBalance + value);
+  balances.set(from, u128.sub(fromBalance, value));
+  balances.set(to, u128.add(recipientBalance, value));
 
   // decrement allowance by transferred amount as well
   decrementAllowance(owner, spender, value)
@@ -287,6 +286,6 @@ export function allowance(owner: string, spender: string): u128 {
 function decrementAllowance(owner: string, spender: string, spent: u128): void {
   const allowancesKey = owner + ":" + spender;
   const allowance = allowances.getSome(allowancesKey);
-  const remaining = allowance - spent;
+  const remaining = u128.sub(allowance, spent);
   allowances.set(allowancesKey, remaining);
 }

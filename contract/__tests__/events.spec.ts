@@ -1,10 +1,8 @@
-import { u128 } from "near-sdk-as";
-import { VM, Context as VMContext } from "wasm-mock-vm";
+import { u128, VM } from "near-sdk-as";
 import {
   TransferEvent, recordTransferEvent, getNewestTransferEvent,
   ApprovalEvent, recordApprovalEvent, getNewestApprovalEvent
 } from "../events"
-import { transfer } from "../erc20";
 
 function logs(): string[] {
   return VM.outcome().logs;
