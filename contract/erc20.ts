@@ -1,34 +1,35 @@
 //@nearfile
 
-const DEBUG = false;
+const DEBUG = false;    // set to `true` to surface debug log msgs throughout
 
-// ref https://eips.ethereum.org/EIPS/eip-20
-// ref https://github.com/ConsenSys/Tokens/blob/master/contracts/eip20/EIP20Interface.sol
+/**
+ * EIP 20: ERC-20 Token Standard
+ *
+ * ERC-20 is a standard interface for tokens which allows for the implementation
+ * of a standard API for tokens within smart contracts. This standard provides
+ * basic functionality to transfer tokens, as well as allow tokens to be approved
+ * so they can be spent by another on-chain third party.
+ *
+ * A standard interface allows any tokens to be re-used by other applications,
+ * from wallets to decentralized exchanges.
+ *
+ * quoting  https://eips.ethereum.org/EIPS/eip-20
+ * see more @ https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC20
+ * see more @ https://github.com/ConsenSys/Tokens/blob/master/contracts/eip20/EIP20Interface.sol
+ */
 
-import { u128, context, logging, PersistentMap } from "near-sdk-as";
+import {
+  u128,                 // extended number type for working with large numbers
+  logging,              // append log messages to VM logging, exposed via `logging.log()` to JS Dev console and via `logs()` in mock VM
+  context,              // access to contract context for sender, attachedDeposit and others. see https://github.com/near/near-sdk-as/blob/master/assembly/runtime/contract.ts
+  storage,              // key-value store representing contract state on the blockchain
+  PersistentMap         // convenience wrapper around storage that mimics a strongly typed map
+} from "near-sdk-as";
 
-import { recordTransferEvent, recordApprovalEvent } from "./events";
-
-// ----------------------------------------------------------------------------
-// BOOK KEEPING
-// ----------------------------------------------------------------------------
-
-const balances = new PersistentMap<string, u128>("bal");  //  map[owner] = balance
-// const allowances = new PersistentMap<string, PersistentMap<string, u128>>("a"); // map[owner][spender] = allowance
-const allowances = new PersistentMap<string, u128>("alw"); // map[owner:spender] = allowance
-
-export function initialize(owner: string): boolean {
-  const initialSupply = totalSupply();
-
-  // transfer initial supply to initial owner
-  balances.set(owner, initialSupply);
-  DEBUG ? logging.log("[status] Initial owner: " + owner) : false;
-
-  // record the transfer event
-  recordTransferEvent("0x0", "0x0", owner, initialSupply);
-
-  return true;
-}
+import {
+  recordTransferEvent,  // record mock "event" when transfers are made by the contract
+  recordApprovalEvent   // record mock "event" when approvals are made by the contract
+} from "./events";      // NEAR doesn't currently provide an event model (as of 2020.03)
 
 // ----------------------------------------------------------------------------
 // OPTIONAL
@@ -43,11 +44,14 @@ export function initialize(owner: string): boolean {
 
   function name() public view returns (string)
 */
-const _name: string = "Solidus Wonder Token";
 
 export function name(): string {
-  DEBUG ? logging.log("[status] Token.name: " + _name) : false;
-  return _name;
+  if(!initialized) initialize()   // enforce auto-initialization
+
+  // if name has been customized, use it.  otherwise use default
+  const name = storage.getSome<string>("_name");
+  DEBUG ? logging.log("[status] Token.name: " + name) : false;
+  return name;
 }
 
 /*
@@ -59,11 +63,14 @@ export function name(): string {
 
   function symbol() public view returns (string)
 */
-const _symbol: string = "SWT" // pronounced "sweet", rhymes with "treat"
 
 export function symbol(): string {
-  DEBUG ? logging.log("[status] Token.symbol: " + _symbol) : false;
-  return _symbol;
+  if(!initialized) initialize()   // enforce auto-initialization
+
+  // if symbol has been customized, use it.  otherwise use default
+  const symbol = storage.getSome<string>("_symbol");
+  DEBUG ? logging.log("[status] Token.symbol: " + symbol) : false;
+  return symbol;
 }
 
 /*
@@ -76,11 +83,28 @@ export function symbol(): string {
 
   function decimals() public view returns (uint8)
 */
-const _decimals: u8 = 2;
 
 export function decimals(): u8 {
-  DEBUG ? logging.log("[status] Token.decimals: " + _decimals.toString()) : false;
-  return _decimals;
+  if(!initialized) initialize()   // enforce auto-initialization
+
+  // if decimals has been customized, use it.  otherwise use default
+  const decimals: u8 = storage.getSome<u8>("_decimals");
+  DEBUG ? logging.log("[status] Token.decimals: " + decimals.toString()) : false;
+  return decimals;
+}
+
+/**
+ * helper function to return exchange rate.
+ *
+ * THIS IS NOT part of the ERC-20 spec
+ */
+function getExchangeRate(): u8 {
+  if(!initialized) initialize()   // enforce auto-initialization
+
+  // if exchange rate has been customized, use it.  otherwise use default
+  const exchange: u8 = storage.getSome<u8>("_exchangeRate");
+  DEBUG ? logging.log("[status] Token.exchange: " + exchange + ":1 NEAR") : false;
+  return exchange
 }
 
 // ----------------------------------------------------------------------------
@@ -93,11 +117,14 @@ export function decimals(): u8 {
  *
  * function totalSupply() public view returns (uint256)
  */
-const _totalSupply: u128 = u128.from(1000);
 
 export function totalSupply(): u128 {
-  DEBUG ? logging.log("[status] Token.supply: " + _totalSupply.toString()) : false;
-  return _totalSupply;
+  if(!initialized) initialize()   // enforce auto-initialization
+
+  // if totalSupply has been customized, use it.  otherwise use default
+  const totalSupply: u128 = storage.getSome<u128>("_totalSupply");
+  DEBUG ? logging.log("[status] Token.supply: " + totalSupply.toString()) : false;
+  return totalSupply;
 }
 
 /**
@@ -110,6 +137,8 @@ export function totalSupply(): u128 {
  * @return The balance
  */
 export function balanceOf(owner: string): u128 {
+  if(!initialized) initialize()   // enforce auto-initialization
+
   DEBUG ? logging.log("[call] balanceOf(" + owner + ")") : false;
 
   // let balance: u128 = balances.getSome(owner);
@@ -139,6 +168,8 @@ export function balanceOf(owner: string): u128 {
  * @return Whether the transfer was successful or not
  */
 export function transfer(to: string, value: u128): boolean {
+  if(!initialized) initialize()   // enforce auto-initialization
+
   DEBUG ? logging.log("[call] transfer(" + to + ", " + value.toString() + ")") : false;
 
   const sender = context.sender;
@@ -188,6 +219,8 @@ export function transfer(to: string, value: u128): boolean {
  * @returns Whether the transfer was successful or not
  */
 export function transferFrom(from: string, to: string, value: u128): boolean {
+  if(!initialized) initialize()   // enforce auto-initialization
+
   DEBUG ? logging.log("[call] transferFrom(" + from + ", " + to + ", " + value.toString() + ")") : false;
 
   const owner = from;
@@ -218,6 +251,7 @@ export function transferFrom(from: string, to: string, value: u128): boolean {
 
   return true;
 }
+
 /**
  * approve
  * Allows `spender` to withdraw from your account multiple times, up to the
@@ -237,6 +271,8 @@ export function transferFrom(from: string, to: string, value: u128): boolean {
  * @returns Whether the approval was successful or not
  */
 export function approve(spender: string, value: u128): boolean {
+  if(!initialized) initialize()   // enforce auto-initialization
+
   DEBUG ? logging.log("[call] approve(" + spender + ", " + value.toString() + ")") : false;
 
   // get owner balance
@@ -247,7 +283,7 @@ export function approve(spender: string, value: u128): boolean {
   assert(balance >= value, "Owner has insufficient funds for approval")
 
   // construct key in collection of allowances and fetch old allowance
-  const allowancesKey = owner + ":" + spender;
+  const allowancesKey = getAllowancesKey(owner, spender);
   const oldValue = <u128>allowances.get(allowancesKey, u128.Zero);
 
   // save or update allowance
@@ -270,22 +306,178 @@ export function approve(spender: string, value: u128): boolean {
  * @return Amount of remaining tokens allowed to spent
 */
 export function allowance(owner: string, spender: string): u128 {
+  if(!initialized) initialize()   // enforce auto-initialization
+
   DEBUG ? logging.log("[call] allowance(" + owner + ", " + spender + ")") : false;
 
   // construct key in collection of allowances and return allowance
-  const allowancesKey = owner + ":" + spender;
+  const allowancesKey = getAllowancesKey(owner, spender);
   return <u128>allowances.get(allowancesKey, u128.Zero)
 }
 
 /**
+ * Helper function to decrement allowance
  *
  * @param owner The address of the account owning tokens
  * @param spender The address of the account able to transfer the tokens
  * @param value Amount
  */
 function decrementAllowance(owner: string, spender: string, spent: u128): void {
-  const allowancesKey = owner + ":" + spender;
+  const allowancesKey = getAllowancesKey(owner, spender);
   const allowance = allowances.getSome(allowancesKey);
   const remaining = u128.sub(allowance, spent);
   allowances.set(allowancesKey, remaining);
 }
+
+/**
+ * Helper function to standardize the mapping
+ * This function would not be needed if we could embed a PersistentMap as the value of another PersistentMap
+ *
+ * @param owner of the account from which tokens will be spent
+ * @param spender of the tokens in the owners account
+ */
+function getAllowancesKey(owner: string, spender: string): string {
+  const separator: string = ":"
+  return owner + separator + spender
+}
+
+
+// ----------------------------------------------------------------------------
+// BOOK KEEPING
+// ----------------------------------------------------------------------------
+
+/**
+ * balances of all accounts in the system.  this is the single source of truth for balances
+ */
+const balances = new PersistentMap<string, u128>("bal");  //  map[owner] = balance
+
+/**
+ * allowances of all accounts in the system.  this is the source of truth for allowed spending
+ */
+// const allowances = new PersistentMap<string, PersistentMap<string, u128>>("a"); // map[owner][spender] = allowance
+const allowances = new PersistentMap<string, u128>("alw"); // map[owner:spender] = allowance
+
+// ----------------------------------------------------------------------------
+// EXTENDED FUNCTIONALITY
+// ----------------------------------------------------------------------------
+
+/**
+ * This function supports the customization of this ERC-20 token before initialization
+ * It may or may not be called.  If not called, the contract uses sensible defaults
+ * If called, it can only be called once (!) and prevents repeat calls
+ *
+ * NOTE: this function uses storage keys with _underscore prefix since these are guaranteed not
+ * to conflict with accounts on the NEAR platform. see https://nomicon.io/DataStructures/Account.html#examples
+ *
+ * THIS IS NOT part of the ERC-20 spec
+ *
+ * @param name of the token
+ * @param symbol for the token
+ * @param decimals places used when rendering the token
+ * @param supply of the tokens in total at launch
+ */
+
+//
+let customized = false
+
+export function customize(
+  name: string = "Solidus Wonder Token",        // awesome name for a token
+  symbol: string = "SWT",                       // pronounced "sweet", rhymes with "treat"
+  decimals: u8 = 2,                             // number of decimal places to assume for rendering,
+  supply: u128 = u128.from(100_000_000),        // <raised pinky> one meeeeellion coins ... divisible in 100ths,
+  exchangeRate: u8 = 100                        // of these ERC-20 tokens per NEAR token
+  ) : boolean {
+
+  // block this function from being called twice
+  if(customized) return true;
+
+  const owner = assertTrueOwner()
+
+  // only set values that are provided, otherwise ignore
+  storage.set("_bank", owner);
+  storage.set("_name", name);
+  storage.set("_symbol", symbol);
+  storage.set("_decimals", decimals);
+  storage.set("_totalSupply", supply);
+  storage.set("_exchangeRate", exchangeRate);
+
+  // block this function from being called twice
+  customized = true;
+  return customized;
+}
+
+/**
+ * This function initializes the token and assigns the configured total supply to a single account
+ * This function may only be called once and prevents subsequent calls
+ *
+ * THIS IS NOT part of the ERC-20 spec
+ */
+
+let initialized = false
+
+export function initialize(): boolean {
+  if(initialized) return true;   // block this function from being called twice
+  if(!customized) customize();    // use defaults if not customized on initialization
+
+  // make sure the caller is the account that owns the contract
+  const owner = assertTrueOwner()
+  storage.set("_bank", owner)
+
+  // transfer initial supply to initial owner
+  const initialSupply: u128 = storage.getSome<u128>("_totalSupply");
+  balances.set(owner, initialSupply);
+
+  DEBUG ? logging.log("[status] Initial owner: " + owner) : false;
+
+  // record the transfer event
+  recordTransferEvent("0x0", "0x0", owner, initialSupply);
+
+  // block this function from being called twice
+  initialized = true;
+  return initialized;
+}
+
+/**
+ * This function supports exchanging NEAR tokens for this ERC-20 token
+ * at the configured rate of exchange
+ *
+ * THIS IS NOT part of the ERC-20 spec
+ */
+export function exchange(): u128 {
+  // grab the sender and their attached deposit
+  const sender = context.sender
+  const deposit = context.attachedDeposit
+  const exchange = getExchangeRate()
+
+  // convert the value using the exchange rate
+  const value = u128.mul(deposit, u128.from(exchange));
+  const bank: string = storage.getSome<string>("_bank");
+
+  // make sure the bank has enough to cover this exchange
+  assert(value < balanceOf(bank), "Not enough tokens available for this exchange")
+
+  // transfer attached deposit supply to initial owner
+  transfer(sender, value)
+  DEBUG ? logging.log("[status] Initial owner: " + bank) : false;
+
+  return value
+}
+
+/**
+ * a guard clause to prevent any account but the token contract itself from
+ * invoking some methods
+ *
+ * THIS IS NOT part of the ERC-20 spec
+ */
+function assertTrueOwner(): string {
+  // only allow the contract account to invoke this guard clause
+  const owner = context.sender
+
+  // the contract name must be available
+  assert(context.contractName, "Permission denied: ERR001")
+  // the sender of this transaction must be the same account
+  assert(owner == context.contractName, "Permission denied: ERR002")
+
+  return owner
+}
+

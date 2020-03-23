@@ -14,7 +14,7 @@ https://docs.google.com/presentation/d/13gjojRbZmPg5RexTzXUBMP8mfc26mOmijx1H54mO
 
 
 
-## Dependencies
+## Dependenciesg
 
 This project uses the following tools to get the job done
 

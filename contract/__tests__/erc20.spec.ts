@@ -2,36 +2,87 @@ import { u128, VM, Context as VMContext } from "near-sdk-as";
 import {
   name, symbol, decimals,
   totalSupply, initialize, balanceOf, transfer,
-  allowance, approve, transferFrom
+  allowance, approve, transferFrom, customize
 } from "../erc20";
 import { getNewestTransferEvent, getNewestApprovalEvent } from "../events"
 
 // accounts
-const zero = "0x0";       // the "zero-account" as specified by ERC-20
-const faucet = "faucet";  // initialized with totalSupply()
-const alice = "alice";    // valid account
-const bob = "bob";        // valid account
-const carol = "carol";    // valid account
-const derek = "derek";    // invalid account
+const zero = "0x0";                 // the "zero-account" as specified by ERC-20
+const contract = "example-token";   // initialized with totalSupply()
+const alice = "alice";              // valid account
+const bob = "bob";                  // valid account
+const carol = "carol";              // valid account
+const derek = "derek";              // invalid account
 
 // token metadata
 const _name = "Solidus Wonder Token";
 const _symbol = "SWT";
 const _decimals: u8 = 2;
-const _supply = 1000;
+const _supply = 100_000_000;
 
 // wallet sizes
 const small = u128.from(111)
 const medium = u128.from(222)
 const large = u128.from(333)
 
-function logs(): string[] {
-  return VM.outcome().logs;
+function showLogs(): void {
+  log(VM.outcome().logs)
 }
 
+function showOutcome(): void {
+  log("balance: [" + toReadable(VM.outcome().balance) + "]")
+  log("burnt gas: [" + VM.outcome().burnt_gas.toString() + "]")
+  log(VM.outcome().return_data)
+  log("storage usage: [" + VM.outcome().storage_usage.toString() + "] ")
+  log("used gas: [" + VM.outcome().used_gas.toString() + "]")
+}
+
+function toReadable(number: u128): string {
+  const exponent = number.toString().length
+  const lhs = number.toString().slice(0, 1)
+  const rhs = number.toString().slice(1, 3)
+  return lhs + "." + rhs + " x 10^" + exponent.toString()
+}
+
+describe("ERC-20 Token (extensions)", () => {
+  beforeEach(() => {
+    VM.saveState()
+  })
+
+  afterEach(() => {
+    VM.restoreState()
+    // log(logs())
+  })
+
+  throws("should not allow initialization unless called by contract account", () => {
+    VMContext.setCurrent_account_id(contract);
+    VMContext.setSigner_account_id("anything.but.the.contract");
+    initialize()
+  })
+
+  throws("should not allow customization unless called by contract account", () => {
+    VMContext.setCurrent_account_id(contract);
+    VMContext.setSigner_account_id("anything.but.the.contract");
+    customize()
+  })
+
+  it("can be initialized", () => {
+    VMContext.setCurrent_account_id(contract);
+    VMContext.setSigner_account_id(contract);
+    initialize()
+  })
+
+})
+
 describe("ERC-20 Token (optional)", () => {
+  beforeAll(() => {
+    VMContext.setCurrent_account_id(contract);
+    VMContext.setSigner_account_id(contract);
+  })
+
   it("should have a name", () => {
     expect(name()).toBe(_name)
+    // showOutcome()
   })
 
   it("should have a symbol", () => {
@@ -50,31 +101,38 @@ describe("ERC-20 Token (startup)", () => {
 
   it("should initially assign entire token supply to a single account", () => {
     // after successful initialization
-    expect(initialize(faucet)).toBeTruthy();
+    VMContext.setCurrent_account_id(contract);
+    VMContext.setSigner_account_id(contract);
+    expect(initialize()).toBeTruthy();
 
     // the balance of the initial owner should match the total supply
-    expect(balanceOf(faucet)).toBe(totalSupply())
+    expect(balanceOf(contract)).toBe(totalSupply())
   })
 
   it("should record an initial transfer event", () => {
     // and event lots should include a record of the TransferEvent
-    // log(logs())
-    // log(getNewestTransferEvent())
     const event = getNewestTransferEvent();
+    // log(event)
+    // log(logs())
     expect(event.spender).toBe(zero);
     expect(event.from).toBe(zero);
-    expect(event.to).toBe(faucet);
+    expect(event.to).toBe(contract);
     expect(event.value).toBe(totalSupply());
+
   })
 })
 
 describe("ERC-20 Token (steady state) ", () => {
   beforeEach(() => {
-    VM.saveState()        // prepare the reset balances after each test
-    initialize(faucet)    // initialize faucet account
+    // prepare the reset balances after each test
+    VM.saveState()
 
-    // spread the wealth
-    VMContext.setSigner_account_id(faucet);
+    // prepare to send a transaction as if coming from the contract account
+    VMContext.setCurrent_account_id(contract);
+    VMContext.setSigner_account_id(contract);
+    initialize()
+
+    // spread the wealth around
     transfer(alice, small)
     transfer(bob, medium)
     transfer(carol, large)
@@ -104,8 +162,8 @@ describe("ERC-20 Token (steady state) ", () => {
       expect(balanceOf(bob)).toBe(u128.add(bobStart, amount));
 
       // test that a transfer event was recorded
-      // log(getNewestTransferEvent())
       const event = getNewestTransferEvent();
+      // log(event)
       expect(event.spender).toBe(alice);
       expect(event.from).toBe(alice);
       expect(event.to).toBe(bob);
@@ -159,8 +217,8 @@ describe("ERC-20 Token (steady state) ", () => {
       expect(allowance(alice, bob)).toBe(u128.from(10));
 
       // test that a approve event was recorded
-      // log(getNewestApprovalEvent())
       const event = getNewestApprovalEvent();
+      // log(event)
       expect(event.owner).toBe(alice);
       expect(event.spender).toBe(bob);
       expect(event.oldValue).toBe(u128.Zero);
@@ -179,8 +237,8 @@ describe("ERC-20 Token (steady state) ", () => {
       expect(allowance(alice, bob)).toBe(limit1);
 
       // test that a approve event was recorded
-      // log(getNewestApprovalEvent())
       const event1 = getNewestApprovalEvent();
+      // log(event1
       expect(event1.owner).toBe(alice);
       expect(event1.spender).toBe(bob);
       expect(event1.oldValue).toBe(u128.Zero);
@@ -191,8 +249,8 @@ describe("ERC-20 Token (steady state) ", () => {
       expect(allowance(alice, bob)).toBe(limit2);
 
       // test that a approve event was recorded
-      // log(getNewestApprovalEvent())
       const event2 = getNewestApprovalEvent();
+      // log(event2
       expect(event2.owner).toBe(alice);
       expect(event2.spender).toBe(bob);
       expect(event2.oldValue).toBe(limit1);
@@ -209,8 +267,8 @@ describe("ERC-20 Token (steady state) ", () => {
       approve(bob, approvedAmount)
 
       // test that a approve event was recorded
-      // log(getNewestApprovalEvent())
       const event = getNewestApprovalEvent();
+      // log(event
       expect(event.owner).toBe(alice);
       expect(event.spender).toBe(bob);
       expect(event.oldValue).toBe(u128.from(0));
@@ -228,8 +286,8 @@ describe("ERC-20 Token (steady state) ", () => {
       approve(bob, approvedAmount)
 
       // test that a approve event was recorded
-      // log(getNewestApprovalEvent())
       const approvalEvent = getNewestApprovalEvent();
+      // log(approvalEvent)
       expect(approvalEvent.owner).toBe(alice);
       expect(approvalEvent.spender).toBe(bob);
       expect(approvalEvent.oldValue).toBe(u128.Zero);
@@ -247,8 +305,8 @@ describe("ERC-20 Token (steady state) ", () => {
       expect(balanceOf(carol)).toBe(u128.add(carolBefore, transferredAmount))
 
       // test that a transfer event was recorded
-      // log(getNewestTransferEvent())
       const transferEvent = getNewestTransferEvent();
+      // log(transferEvent)
       expect(transferEvent.spender).toBe(bob);
       expect(transferEvent.from).toBe(alice);
       expect(transferEvent.to).toBe(carol);
