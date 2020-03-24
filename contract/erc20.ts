@@ -1,6 +1,6 @@
 //@nearfile
 
-const DEBUG = false;    // set to `true` to surface debug log msgs throughout
+const DEBUG = true;    // set to `true` to surface debug log msgs throughout
 
 /**
  * EIP 20: ERC-20 Token Standard
@@ -46,8 +46,6 @@ import {
 */
 
 export function name(): string {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   // if name has been customized, use it.  otherwise use default
   const name = storage.getSome<string>("_name");
   DEBUG ? logging.log("[status] Token.name: " + name) : false;
@@ -65,8 +63,6 @@ export function name(): string {
 */
 
 export function symbol(): string {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   // if symbol has been customized, use it.  otherwise use default
   const symbol = storage.getSome<string>("_symbol");
   DEBUG ? logging.log("[status] Token.symbol: " + symbol) : false;
@@ -85,26 +81,10 @@ export function symbol(): string {
 */
 
 export function decimals(): u8 {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   // if decimals has been customized, use it.  otherwise use default
   const decimals: u8 = storage.getSome<u8>("_decimals");
   DEBUG ? logging.log("[status] Token.decimals: " + decimals.toString()) : false;
   return decimals;
-}
-
-/**
- * helper function to return exchange rate.
- *
- * THIS IS NOT part of the ERC-20 spec
- */
-function getExchangeRate(): u8 {
-  if(!initialized) initialize()   // enforce auto-initialization
-
-  // if exchange rate has been customized, use it.  otherwise use default
-  const exchange: u8 = storage.getSome<u8>("_exchangeRate");
-  DEBUG ? logging.log("[status] Token.exchange: " + exchange + ":1 NEAR") : false;
-  return exchange
 }
 
 // ----------------------------------------------------------------------------
@@ -119,8 +99,6 @@ function getExchangeRate(): u8 {
  */
 
 export function totalSupply(): u128 {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   // if totalSupply has been customized, use it.  otherwise use default
   const totalSupply: u128 = storage.getSome<u128>("_totalSupply");
   DEBUG ? logging.log("[status] Token.supply: " + totalSupply.toString()) : false;
@@ -137,8 +115,6 @@ export function totalSupply(): u128 {
  * @return The balance
  */
 export function balanceOf(owner: string): u128 {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   DEBUG ? logging.log("[call] balanceOf(" + owner + ")") : false;
 
   // let balance: u128 = balances.getSome(owner);
@@ -168,8 +144,6 @@ export function balanceOf(owner: string): u128 {
  * @return Whether the transfer was successful or not
  */
 export function transfer(to: string, value: u128): boolean {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   DEBUG ? logging.log("[call] transfer(" + to + ", " + value.toString() + ")") : false;
 
   const sender = context.sender;
@@ -219,8 +193,6 @@ export function transfer(to: string, value: u128): boolean {
  * @returns Whether the transfer was successful or not
  */
 export function transferFrom(from: string, to: string, value: u128): boolean {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   DEBUG ? logging.log("[call] transferFrom(" + from + ", " + to + ", " + value.toString() + ")") : false;
 
   const owner = from;
@@ -271,8 +243,6 @@ export function transferFrom(from: string, to: string, value: u128): boolean {
  * @returns Whether the approval was successful or not
  */
 export function approve(spender: string, value: u128): boolean {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   DEBUG ? logging.log("[call] approve(" + spender + ", " + value.toString() + ")") : false;
 
   // get owner balance
@@ -306,8 +276,6 @@ export function approve(spender: string, value: u128): boolean {
  * @return Amount of remaining tokens allowed to spent
 */
 export function allowance(owner: string, spender: string): u128 {
-  if(!initialized) initialize()   // enforce auto-initialization
-
   DEBUG ? logging.log("[call] allowance(" + owner + ", " + spender + ")") : false;
 
   // construct key in collection of allowances and return allowance
@@ -377,19 +345,15 @@ const allowances = new PersistentMap<string, u128>("alw"); // map[owner:spender]
  * @param supply of the tokens in total at launch
  */
 
-//
-let customized = false
-
 export function customize(
   name: string = "Solidus Wonder Token",        // awesome name for a token
   symbol: string = "SWT",                       // pronounced "sweet", rhymes with "treat"
   decimals: u8 = 2,                             // number of decimal places to assume for rendering,
   supply: u128 = u128.from(100_000_000),        // <raised pinky> one meeeeellion coins ... divisible in 100ths,
   exchangeRate: u8 = 100                        // of these ERC-20 tokens per NEAR token
-  ) : boolean {
+  ) : void {
 
-  // block this function from being called twice
-  if(customized) return true;
+  DEBUG ? logging.log("[call] customize('" + name + "', '" + symbol + "', " + decimals.toString() + ", " + supply.toString() + ", " + exchangeRate.toString() + ")") : false;
 
   const owner = assertTrueOwner()
 
@@ -401,9 +365,6 @@ export function customize(
   storage.set("_totalSupply", supply);
   storage.set("_exchangeRate", exchangeRate);
 
-  // block this function from being called twice
-  customized = true;
-  return customized;
 }
 
 /**
@@ -413,11 +374,8 @@ export function customize(
  * THIS IS NOT part of the ERC-20 spec
  */
 
-let initialized = false
-
-export function initialize(): boolean {
-  if(initialized) return true;   // block this function from being called twice
-  if(!customized) customize();    // use defaults if not customized on initialization
+export function initialize(): void {
+  DEBUG ? logging.log("[call] initialize()") : false;
 
   // make sure the caller is the account that owns the contract
   const owner = assertTrueOwner()
@@ -431,36 +389,6 @@ export function initialize(): boolean {
 
   // record the transfer event
   recordTransferEvent("0x0", "0x0", owner, initialSupply);
-
-  // block this function from being called twice
-  initialized = true;
-  return initialized;
-}
-
-/**
- * This function supports exchanging NEAR tokens for this ERC-20 token
- * at the configured rate of exchange
- *
- * THIS IS NOT part of the ERC-20 spec
- */
-export function exchange(): u128 {
-  // grab the sender and their attached deposit
-  const sender = context.sender
-  const deposit = context.attachedDeposit
-  const exchange = getExchangeRate()
-
-  // convert the value using the exchange rate
-  const value = u128.mul(deposit, u128.from(exchange));
-  const bank: string = storage.getSome<string>("_bank");
-
-  // make sure the bank has enough to cover this exchange
-  assert(value < balanceOf(bank), "Not enough tokens available for this exchange")
-
-  // transfer attached deposit supply to initial owner
-  transfer(sender, value)
-  DEBUG ? logging.log("[status] Initial owner: " + bank) : false;
-
-  return value
 }
 
 /**

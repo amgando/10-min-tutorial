@@ -1,14 +1,16 @@
 import { u128, VM, Context as VMContext } from "near-sdk-as";
 import {
   name, symbol, decimals,
-  totalSupply, initialize, balanceOf, transfer,
-  allowance, approve, transferFrom, customize
+  totalSupply, balanceOf, transfer,
+  allowance, approve, transferFrom,
+  customize, initialize
 } from "../erc20";
 import { getNewestTransferEvent, getNewestApprovalEvent } from "../events"
 
 // accounts
 const zero = "0x0";                 // the "zero-account" as specified by ERC-20
-const contract = "example-token";   // initialized with totalSupply()
+const contract = "example-token";   // account that owns the contract
+const bank = "_bank";               // initialized with totalSupply()
 const alice = "alice";              // valid account
 const bob = "bob";                  // valid account
 const carol = "carol";              // valid account
@@ -49,16 +51,14 @@ describe("ERC-20 Token (extensions)", () => {
     VM.saveState()
   })
 
-  // afterEach(() => {
-  //   // not sure why, but calling restoreState() breaks other tests.
-  //   // suspicion: has to do with how initialize() and customize() use
-  //   // global variables
-  //   VM.restoreState()
-  // })
+  afterEach(() => {
+    VM.restoreState()
+  })
 
   throws("should not allow initialization unless called by contract account", () => {
     VMContext.setCurrent_account_id(contract);
     VMContext.setSigner_account_id("anything.but.the.contract");
+    customize()
     initialize()
   })
 
@@ -71,20 +71,28 @@ describe("ERC-20 Token (extensions)", () => {
   it("can be initialized", () => {
     VMContext.setCurrent_account_id(contract);
     VMContext.setSigner_account_id(contract);
+    customize()
     initialize()
+    // showLogs()
   })
 
 })
 
 describe("ERC-20 Token (optional)", () => {
   beforeAll(() => {
+    VM.saveState()
     VMContext.setCurrent_account_id(contract);
     VMContext.setSigner_account_id(contract);
+    customize()
+    initialize()
+  })
+
+  afterAll(() => {
+    VM.restoreState()
   })
 
   it("should have a name", () => {
     expect(name()).toBe(_name)
-    // showOutcome()
   })
 
   it("should have a symbol", () => {
@@ -97,16 +105,17 @@ describe("ERC-20 Token (optional)", () => {
 })
 
 describe("ERC-20 Token (startup)", () => {
+  beforeAll(() => {
+    customize()
+    initialize()
+  })
+
   it("should respond to totalSupply()", () => {
+    // the total supply should be available
     expect(totalSupply()).toBe(u128.from(_supply))
   })
 
   it("should initially assign entire token supply to a single account", () => {
-    // after successful initialization
-    VMContext.setCurrent_account_id(contract);
-    VMContext.setSigner_account_id(contract);
-    expect(initialize()).toBeTruthy();
-
     // the balance of the initial owner should match the total supply
     expect(balanceOf(contract)).toBe(totalSupply())
   })
@@ -132,6 +141,7 @@ describe("ERC-20 Token (steady state) ", () => {
     // prepare to send a transaction as if coming from the contract account
     VMContext.setCurrent_account_id(contract);
     VMContext.setSigner_account_id(contract);
+    customize()
     initialize()
 
     // spread the wealth around
@@ -267,14 +277,6 @@ describe("ERC-20 Token (steady state) ", () => {
 
       // derek approves bob to spend 10 tokens on his behalf
       approve(bob, approvedAmount)
-
-      // test that a approve event was recorded
-      const event = getNewestApprovalEvent();
-      // log(event
-      expect(event.owner).toBe(alice);
-      expect(event.spender).toBe(bob);
-      expect(event.oldValue).toBe(u128.from(0));
-      expect(event.value).toBe(approvedAmount);
     })
 
     it("should allow approved transfers", () => {
@@ -313,9 +315,9 @@ describe("ERC-20 Token (steady state) ", () => {
       expect(transferEvent.from).toBe(alice);
       expect(transferEvent.to).toBe(carol);
       expect(transferEvent.value).toBe(transferredAmount);
-
     })
 
+    // should not allow excessive transfers
     describe("", () => {
       beforeEach(() => {
         // assume alice signs a transfer transaction
@@ -339,4 +341,5 @@ describe("ERC-20 Token (steady state) ", () => {
 
     })
   })
+
 })
