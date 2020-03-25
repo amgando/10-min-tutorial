@@ -1,0 +1,30 @@
+{
+  "bank": {
+    "id": "bank",
+    "name": "Central Bank",
+    "balance": 0,
+    "type": "bank",
+    "color": "black"
+  },
+  "alice": {
+    "id": "alice",
+    "name": "Alice",
+    "balance": 0,
+    "type": "person",
+    "color": "red"
+  },
+  "bob": {
+    "id": "bob",
+    "name": "Bob",
+    "balance": 0,
+    "type": "person",
+    "color": "blue"
+  },
+  "carol": {
+    "id": "carol",
+    "name": "Carol",
+    "balance": 0,
+    "type": "person",
+    "color": "orange"
+  }
+}

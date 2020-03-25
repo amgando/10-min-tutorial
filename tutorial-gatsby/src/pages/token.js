@@ -14,8 +14,12 @@ import SEO from "../components/seo"
 import DemoSidebar from "../components/demo-sidebar"
 import ConfigureToken from "../components/token/configure-token"
 import DeployToken from "../components/token/deploy-token"
+import AllocateTokens from "../components/token/allocate-tokens"
+
+import { decimalize } from "../utils"
 
 import { token as demo } from "../data/demos"
+import accounts from "../data/accounts"
 
 const STEP_TRANSITION_DURATION = 1000
 
@@ -37,10 +41,12 @@ export default class TokenDemo extends React.Component {
       complete: false,
     }))
 
-    this.state = { steps, token: defaultToken }
+    // TODO: refactor to use useState React hook
+    this.state = { steps, token: defaultToken, accounts }
     this.nextStep = this.nextStep.bind(this)
     this.saveToken = this.saveToken.bind(this)
     this.deployToken = this.deployToken.bind(this)
+    this.transfer = this.transfer.bind(this)
   }
 
   get activeStepIndex() {
@@ -50,7 +56,7 @@ export default class TokenDemo extends React.Component {
 
   get totalTokenSupply() {
     const { token } = this.state
-    return (token.supply / 10 ** token.decimals).toFixed(token.decimals)
+    return decimalize(token.supply, token.decimals)
   }
 
   nextStep(delay = STEP_TRANSITION_DURATION) {
@@ -80,13 +86,23 @@ export default class TokenDemo extends React.Component {
   saveToken(token) {
     token.saved = true
     this.setState({ token })
+
     this.nextStep()
   }
 
   deployToken() {
     // TODO: implement actual deployment functionality
-    this.setState({ token: { ...this.state.token, deployed: true } })
+    const { token, accounts } = this.state
+    token.deployed = true
+    accounts.bank.balance = token.supply
+    this.setState({ token, accounts })
     this.nextStep()
+  }
+
+  transfer({ from, to, amount }) {
+    accounts[from].balance = accounts[from].balance - amount
+    accounts[to].balance = accounts[to].balance + amount
+    this.setState({ accounts })
   }
 
   get savedTokenComponent() {
@@ -94,7 +110,11 @@ export default class TokenDemo extends React.Component {
     return (
       <Segment inverted>
         <Header as="h2" inverted color="grey">
-          {token.deployed && <Label attached="top right" color="green" size="large" horizontal>DEPLOYED</Label>}
+          {token.deployed && (
+            <Label attached="top right" color="green" size="large" horizontal>
+              DEPLOYED
+            </Label>
+          )}
           <Icon name="dot circle outline" />
           <Header.Content>
             {token.name}
@@ -114,7 +134,11 @@ export default class TokenDemo extends React.Component {
       // Step 2: deploy token
       <DeployToken token={this.state.token} onDeploy={this.deployToken} />,
       // Step 3.1: use token: allocate tokens to user
-      <div>Step 3.1: use token: allocate tokens to user</div>,
+      <AllocateTokens
+        token={this.state.token}
+        accounts={this.state.accounts}
+        onTransfer={this.transfer}
+      />,
       // Step 3.2: use token: transfer tokens between users
       <div>Step 3.2: use token: transfer tokens between users</div>,
       // Step 3.3: use token: mediate transfer between users
@@ -148,9 +172,14 @@ export default class TokenDemo extends React.Component {
                   {this.savedTokenComponent}
                 </Transition>
                 {/* {this.state.token.saved && this.savedToken} */}
-                <Transition.Group animation="fade" duration={STEP_TRANSITION_DURATION}>
+                <Transition.Group
+                  animation="fade"
+                  duration={STEP_TRANSITION_DURATION}
+                >
                   {this.activeStepIndex >= 0 && (
-                    <Segment vertical>{this.stepComponent[this.activeStepIndex]}</Segment>
+                    <Segment vertical>
+                      {this.stepComponent[this.activeStepIndex]}
+                    </Segment>
                   )}
                 </Transition.Group>
               </Grid.Column>
