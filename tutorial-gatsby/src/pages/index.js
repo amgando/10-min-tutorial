@@ -2,19 +2,28 @@ import React from "react"
 import { Link } from "gatsby"
 
 import Layout from "../components/layout"
-import Image from "../components/image"
 import SEO from "../components/seo"
+import NearLogin from "../components/near-login"
+
+import nearLogoStack from "../images/near_logo_stack.svg"
+
+import { Segment, Container, Header, Image } from "semantic-ui-react"
 
 const IndexPage = () => (
   <Layout>
-    <SEO title="Home" />
-    <h1>Hi people</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2/">Go to page 2</Link>
+    <SEO title="10-minute Titles" />
+    <Segment inverted vertical className="masthead center aligned">
+      <Container text>
+        <Header as="h1" inverted size="huge">
+          10-minute Titles
+        </Header>
+        <h2>
+          Self-contained lessons for NEAR Protocol
+        </h2>
+        <NearLogin />
+        <Image src={nearLogoStack} size="large" rounded centered />
+      </Container>
+    </Segment>
   </Layout>
 )
 
