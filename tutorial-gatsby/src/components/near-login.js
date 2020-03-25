@@ -2,23 +2,26 @@ import React from "react"
 import { Button, Icon } from "semantic-ui-react"
 
 export default class NearLogin extends React.Component {
-  super() {
-    this.isSignedIn = false
+  constructor() {
+    super()
+    this.state = { isSignedIn: false }
+
+    this.signIn = this.signIn.bind(this)
+    this.signOut = this.signOut.bind(this)
   }
 
   signIn() {
-    this.isSignedIn = true
+    this.setState({ isSignedIn: true })
   }
 
   signOut() {
-    this.isSignedIn = false
+    this.setState({ isSignedIn: false })
   }
 
   render() {
     const signInButton = (
       <Button onClick={this.signIn} size="huge" color="blue" id="login">
         Sign in with NEAR
-        &nbsp;
         <Icon className="right" name="sign-in"></Icon>
       </Button>
     )
@@ -26,11 +29,10 @@ export default class NearLogin extends React.Component {
     const signOutButton = (
       <Button onClick={this.signOut} size="huge" color="orange" id="login">
         Sign out
-        &nbsp;
         <Icon className="right" name="sign-out"></Icon>
       </Button>
     )
 
-    return this.isSignedIn ? signOutButton : signInButton
+    return this.state.isSignedIn ? signOutButton : signInButton
   }
 }
