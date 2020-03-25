@@ -1,5 +1,4 @@
 import React from "react"
-import { Link } from "gatsby"
 import { Segment, Container, Header, Image } from "semantic-ui-react"
 
 import Layout from "../components/layout"

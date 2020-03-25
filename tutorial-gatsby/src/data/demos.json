@@ -15,6 +15,23 @@
       { "icon": "css3", "text": "CSS" },
       { "icon": "javascript", "text": "JavaScript" },
       { "icon": "webassembly", "text": "AssemblyScript" }
+    ],
+    "steps": [
+      {
+        "icon": "puzzle piece",
+        "title": "Design the Token",
+        "description": "Configure token parameters"
+      },
+      {
+        "icon": "upload",
+        "title": "Deploy the Token",
+        "description": "Publish to the blockchain"
+      },
+      {
+        "icon": "money bill alternate",
+        "title": "Use the Token",
+        "description": "Transfers and Approvals"
+      }
     ]
   },
   "dapp": {
