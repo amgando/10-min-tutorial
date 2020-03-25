@@ -1,8 +1,5 @@
 import React from "react"
-
 import { Step, Header, Icon } from "semantic-ui-react"
-
-import "../styles/main.css"
 
 const DemoSidebar = ({ header, steps }) => {
   return (
