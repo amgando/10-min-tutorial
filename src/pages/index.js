@@ -2,7 +2,7 @@ import React from "react"
 import { Segment, Container, Header, Image } from "semantic-ui-react"
 
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Head from "../components/head"
 import NearLogin from "../components/near-login"
 import DemoListItem from "../components/demo-list-item"
 
@@ -11,8 +11,7 @@ import demos from "../data/demos"
 
 const IndexPage = () => (
   <Layout>
-    <SEO title="10-minute Titles" />
-
+    <Head title="10-minute Titles" />
     <Segment inverted vertical className="masthead center aligned">
       <Container text>
         <Header as="h1" inverted size="huge">

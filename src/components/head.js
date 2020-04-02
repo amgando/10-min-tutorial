@@ -1,5 +1,5 @@
 /**
- * SEO component that queries for data with
+ * Head component that queries for data with
  *  Gatsby's useStaticQuery React hook
  *
  * See: https://www.gatsbyjs.org/docs/use-static-query/
@@ -10,7 +10,7 @@ import PropTypes from "prop-types"
 import Helmet from "react-helmet"
 import { useStaticQuery, graphql } from "gatsby"
 
-function SEO({ description, lang, meta, title }) {
+function Head({ description, lang, meta, title, children }) {
   const { site } = useStaticQuery(
     graphql`
       query {
@@ -68,21 +68,26 @@ function SEO({ description, lang, meta, title }) {
           content: metaDescription,
         },
       ].concat(meta)}
-    />
+    >
+      <script src="https://cdn.jsdelivr.net/npm/nearlib/dist/nearlib.min.js" />
+      {children}
+    </Helmet>
   )
 }
 
-SEO.defaultProps = {
+Head.defaultProps = {
   lang: `en`,
   meta: [],
   description: ``,
+  children: ''
 }
 
-SEO.propTypes = {
+Head.propTypes = {
   description: PropTypes.string,
   lang: PropTypes.string,
   meta: PropTypes.arrayOf(PropTypes.object),
   title: PropTypes.string.isRequired,
+  children: PropTypes.node,
 }
 
-export default SEO
+export default Head

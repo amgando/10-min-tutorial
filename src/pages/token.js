@@ -10,7 +10,7 @@ import {
 } from "semantic-ui-react"
 
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Head from "../components/head"
 import DemoSidebar from "../components/demo-sidebar"
 import ConfigureToken from "../components/token/configure-token"
 import DeployToken from "../components/token/deploy-token"
@@ -173,7 +173,7 @@ export default class TokenDemo extends React.Component {
   render() {
     return (
       <Layout>
-        <SEO title={demo.title} />
+        <Head title={demo.title} />
         <Container>
           <Grid padded>
             <Grid.Row>
