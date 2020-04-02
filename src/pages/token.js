@@ -11,6 +11,7 @@ import {
 
 import Layout from "../components/layout"
 import Head from "../components/head"
+import Near from "../components/near"
 import DemoSidebar from "../components/demo-sidebar"
 import ConfigureToken from "../components/token/configure-token"
 import DeployToken from "../components/token/deploy-token"
@@ -22,6 +23,7 @@ import { decimalize } from "../utils"
 
 import { token as demo } from "../data/demos"
 import accounts from "../data/accounts"
+import * as erc20 from "../contracts/erc20.wasm"
 
 const STEP_TRANSITION_DURATION = 1000
 
@@ -36,6 +38,8 @@ const defaultToken = {
 export default class TokenDemo extends React.Component {
   constructor(props) {
     super(props)
+
+    window.erc20 = erc20
 
     const steps = demo.steps.map((step, index) => ({
       ...step,
@@ -173,6 +177,7 @@ export default class TokenDemo extends React.Component {
   render() {
     return (
       <Layout>
+        <Near onLoaded={console.log} />
         <Head title={demo.title} />
         <Container>
           <Grid padded>
