@@ -1,0 +1,21 @@
+{
+  "name": "tokens",
+  "version": "0.0.1",
+  "description": "One of a series of small tutorials under the label 10-min Treats",
+  "scripts": {
+    "test:contract": "asp --config near/config/as-pect.js --verbose",
+    "build:contract": "mkdir -p out/ && near/scripts/compile-contract.js",
+    "deploy:contract": "near dev-deploy",
+    "dev:contract": "npx nodemon --config ./near/config/nodemon.contract.json --exec 'yarn run build:contract'",
+    "dev:web": "npx nodemon --config ./near/config/nodemon.web.json --exec npx static src",
+    "start": "npm run dev:web; npm dev:contract "
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "assemblyscript": "^0.9.4",
+    "near-sdk-as": "^0.1.2",
+    "near-shell": "^0.20.1",
+    "node-static": "^0.7.11",
+    "nodemon": "^2.0.2"
+  }
+}
