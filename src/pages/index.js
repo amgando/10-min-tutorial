@@ -26,8 +26,8 @@ const IndexPage = () => (
     </Segment>
 
     <Container>
-      {Object.values(demos).map(demo => (
-        <DemoListItem {...demo} />
+      {Object.values(demos).map((demo, index) => (
+        <DemoListItem key={index} {...demo} />
       ))}
     </Container>
   </Layout>

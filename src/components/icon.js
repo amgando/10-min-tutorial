@@ -24,7 +24,7 @@ export default function Icon({ icon, text }) {
   const iconImg = iconMap[icon]
 
   return (
-    <div class="ui large image label">
+    <div className="ui large image label">
       <img src={iconImg} />
       {text}
     </div>
