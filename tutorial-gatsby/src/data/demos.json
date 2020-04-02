@@ -29,8 +29,18 @@
       },
       {
         "icon": "money bill alternate",
-        "title": "Use the Token",
-        "description": "Transfers and Approvals"
+        "title": "Allocate Tokens",
+        "description": "Distribute to user accounts"
+      },
+      {
+        "icon": "exchange",
+        "title": "Transfer Tokens",
+        "description": "Move between accounts"
+      },
+      {
+        "icon": "unlock alternate",
+        "title": "Transfer Allowances",
+        "description": "Authorize third party for transfer"
       }
     ]
   },

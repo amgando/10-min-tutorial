@@ -6,7 +6,7 @@ const DemoSidebar = ({ steps }) => {
     <Step.Group vertical size="large">
       {steps.map(step => (
         <Step key={step.title} active={step.active} completed={step.complete}>
-          <Icon name={step.icon} />
+          {step.icon && <Icon name={step.icon} />}
           <Step.Content>
             <Step.Title>{step.title}</Step.Title>
             <Step.Description>{step.description}</Step.Description>

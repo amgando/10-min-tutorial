@@ -15,6 +15,8 @@ import DemoSidebar from "../components/demo-sidebar"
 import ConfigureToken from "../components/token/configure-token"
 import DeployToken from "../components/token/deploy-token"
 import AllocateTokens from "../components/token/allocate-tokens"
+import TransferTokens from "../components/token/transfer-tokens"
+import AllowanceTransfers from "../components/token/allowance-transfers"
 
 import { decimalize } from "../utils"
 
@@ -47,6 +49,8 @@ export default class TokenDemo extends React.Component {
     this.saveToken = this.saveToken.bind(this)
     this.deployToken = this.deployToken.bind(this)
     this.transfer = this.transfer.bind(this)
+    this.approve = this.approve.bind(this)
+    this.decrementAllowance = this.decrementAllowance.bind(this)
   }
 
   get activeStepIndex() {
@@ -100,9 +104,18 @@ export default class TokenDemo extends React.Component {
   }
 
   transfer({ from, to, amount }) {
+    // TODO: implement actual transfer functionality
     accounts[from].balance = accounts[from].balance - amount
     accounts[to].balance = accounts[to].balance + amount
     this.setState({ accounts })
+  }
+
+  approve({ owner, spender, amount }) {
+    // TODO: implement actual approval functionality
+  }
+
+  decrementAllowance({ owner, spender, spent }) {
+    // TODO: implement actual decrement functionality
   }
 
   get savedTokenComponent() {
@@ -138,11 +151,22 @@ export default class TokenDemo extends React.Component {
         token={this.state.token}
         accounts={this.state.accounts}
         onTransfer={this.transfer}
+        onContinue={this.nextStep}
       />,
       // Step 3.2: use token: transfer tokens between users
-      <div>Step 3.2: use token: transfer tokens between users</div>,
+      <TransferTokens
+        token={this.state.token}
+        accounts={this.state.accounts}
+        onTransfer={this.transfer}
+        onContinue={this.nextStep}
+      />,
       // Step 3.3: use token: mediate transfer between users
-      <div>Step 3.3: use token: mediate transfer between users</div>,
+      <AllowanceTransfers
+        token={this.state.token}
+        accounts={this.state.accounts}
+        onApproval={this.approve}
+        onDecrement={this.decrementAllowance}
+      />,
     ]
   }
 
