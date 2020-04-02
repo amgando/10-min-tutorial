@@ -2,19 +2,33 @@ import React from "react"
 import { Button, Icon } from "semantic-ui-react"
 
 export default class NearLogin extends React.Component {
-  constructor() {
-    super()
-    this.state = { isSignedIn: false }
+  constructor(props) {
+    super(props)
+
+    this.state = { isSignedIn: props.wallet.isSignedIn() }
 
     this.signIn = this.signIn.bind(this)
     this.signOut = this.signOut.bind(this)
   }
 
   signIn() {
-    this.setState({ isSignedIn: true })
+    const signIn = {
+      account: null,
+      title: "10 min Titles by NEAR",
+      successUrl: "",
+      failureUrl: "",
+    }
+    this.props.wallet.requestSignIn(
+      signIn.account,
+      signIn.title,
+      signIn.successUrl,
+      signIn.failureUrl
+    )
   }
 
   signOut() {
+    this.props.wallet.signOut()
+
     this.setState({ isSignedIn: false })
   }
 

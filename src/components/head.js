@@ -69,7 +69,6 @@ function Head({ description, lang, meta, title, children }) {
         },
       ].concat(meta)}
     >
-      <script src="https://cdn.jsdelivr.net/npm/nearlib/dist/nearlib.min.js" />
       {children}
     </Helmet>
   )
