@@ -6,13 +6,14 @@
     "build": "gatsby build",
     "develop": "gatsby develop",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
-    "start": "npm run develop",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\" && exit 1",
     "test:contract": "asp --config near/config/as-pect.js --verbose",
     "build:contract": "mkdir -p out/ && near/scripts/compile-contract.js",
-    "deploy:contract": "near dev-deploy"
+    "deploy:contract": "near dev-deploy",
+    "dev:contract": "npx nodemon --config ./near/config/nodemon.contract.json --exec 'yarn run build:contract'",
+    "start": "npm run develop; npm run dev:contract"
   },
   "dependencies": {
     "base64-loader": "^1.0.0",
