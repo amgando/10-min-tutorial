@@ -20,10 +20,10 @@ import TransferTokens from "../components/token/transfer-tokens"
 import AllowanceTransfers from "../components/token/allowance-transfers"
 
 import { decimalize } from "../utils"
+import { deployContract, getContract } from "../contract"
 
 import { token as demo } from "../data/demos"
 import accounts from "../data/accounts"
-import * as erc20 from "../contracts/erc20.wasm"
 
 const STEP_TRANSITION_DURATION = 1000
 
@@ -38,8 +38,6 @@ const defaultToken = {
 export default class TokenDemo extends React.Component {
   constructor(props) {
     super(props)
-
-    window.erc20 = erc20
 
     const steps = demo.steps.map((step, index) => ({
       ...step,
@@ -98,8 +96,15 @@ export default class TokenDemo extends React.Component {
     this.nextStep()
   }
 
-  deployToken() {
+  async deployToken() {
     // TODO: implement actual deployment functionality
+    try {
+      await deployContract()
+      // await getContract()
+    } catch (error) {
+      console.error("TokenDemo -> deployToken -> error", error)
+    }
+
     const { token, accounts } = this.state
     token.deployed = true
     accounts.bank.balance = token.supply

@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 import React from "react"
 
 export default class Near extends React.Component {
@@ -24,24 +22,23 @@ export default class Near extends React.Component {
     const config = {
       networkId: 'default', // this can be any label to namespace user accounts
       nodeUrl: "https://rpc.nearprotocol.com", // this endpoint must point to the network you want to reach
-      walletUrl: "http://wallet.nearprotocol.com", // this endpoint must exist for the wallet to work
+      walletUrl: "https://wallet.nearprotocol.com", // this endpoint must exist for the wallet to work
       helperUrl: 'https://near-contract-helper.onrender.com',
       deps: {
-        keyStore: new nearlib.keyStores.BrowserLocalStorageKeyStore() // keys are stored as plaintext in LocalStorage
+        keyStore: new window.nearlib.keyStores.BrowserLocalStorageKeyStore() // keys are stored as plaintext in LocalStorage
       }
     };
 
-
-    window.near = await nearlib.connect(config); // connect to the NEAR platform
-    window.wallet = new nearlib.WalletAccount(window.near) // instantiate a new wallet
+    window.near = await window.nearlib.connect(config); // connect to the NEAR platform
+    window.wallet = new window.nearlib.WalletAccount(window.near) // instantiate a new wallet
 
     if (window.wallet.getAccountId() !== '') {
       window.near.config.masterAccount = window.wallet.getAccountId()
     }
 
-    console.log(`connected to near with masterAccount = [${window.near.config.masterAccount}]`)
+    console.info(`connected to near with masterAccount = [${window.near.config.masterAccount}]`)
 
-    this.props.onLoaded({ wallet: window.wallet })
+    if (this.props.onLoaded) this.props.onLoaded({ near: window.near, wallet: window.wallet })
   }
 
   render() {
