@@ -345,7 +345,7 @@ const allowances = new PersistentMap<string, u128>("alw"); // map[owner:spender]
  * @param supply of the tokens in total at launch
  */
 
-export function customize(
+function _customize(
   name: string = "Solidus Wonder Token",        // awesome name for a token
   symbol: string = "SWT",                       // pronounced "sweet", rhymes with "treat"
   decimals: u8 = 2,                             // number of decimal places to assume for rendering,
@@ -358,13 +358,20 @@ export function customize(
   const owner = assertTrueOwner()
 
   // only set values that are provided, otherwise ignore
-  storage.set("_bank", owner);
-  storage.set("_name", name);
-  storage.set("_symbol", symbol);
-  storage.set("_decimals", decimals);
-  storage.set("_totalSupply", supply);
-  storage.set("_exchangeRate", exchangeRate);
+  storage.setString("_bank", owner);
+  storage.setString("_name", name);
+  storage.setString("_symbol", symbol);
+  storage.set<u8>("_decimals", decimals);
+  storage.set<u128>("_totalSupply", supply);
+  storage.set<u8>("_exchangeRate", exchangeRate);
 
+}
+
+/**
+ * functions with default values can not be exported at this time
+ */
+export function customize(): void {
+  _customize()
 }
 
 /**
