@@ -17,7 +17,6 @@ const DEBUG = true;    // set to `true` to surface debug log msgs throughout
  * see more @ https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC20
  * see more @ https://github.com/ConsenSys/Tokens/blob/master/contracts/eip20/EIP20Interface.sol
  */
-
 import {
   u128,                 // extended number type for working with large numbers
   logging,              // append log messages to VM logging, exposed via `logging.log()` to JS Dev console and via `logs()` in mock VM
@@ -35,16 +34,14 @@ import {
 // OPTIONAL
 // ----------------------------------------------------------------------------
 
-/*
-  name
-  Returns the name of the token - e.g. "MyToken".
-
-  OPTIONAL - This method can be used to improve usability, but interfaces and
-             other contracts MUST NOT expect these values to be present.
-
-  function name() public view returns (string)
-*/
-
+/**
+ * Returns the name of the token - ie. "Solidus Wonder Token"
+ *
+ * OPTIONAL - This method can be used to improve usability, but interfaces and
+ *            other contracts MUST NOT expect these values to be present.
+ *
+ * @returns The name of the token
+ */
 export function name(): string {
   // if name has been customized, use it.  otherwise use default
   const name = storage.getSome<string>("_name");
@@ -52,16 +49,14 @@ export function name(): string {
   return name;
 }
 
-/*
-  symbol
-  Returns the symbol of the token. E.g. "HIX".
-
-  OPTIONAL - This method can be used to improve usability, but interfaces and
-             other contracts MUST NOT expect these values to be present.
-
-  function symbol() public view returns (string)
-*/
-
+/**
+ * Returns the symbol of the token. ie. "SWT"
+ *
+ * OPTIONAL - This method can be used to improve usability, but interfaces and
+ *            other contracts MUST NOT expect these values to be present.
+ *
+ * @returns The symbol of the token
+ */
 export function symbol(): string {
   // if symbol has been customized, use it.  otherwise use default
   const symbol = storage.getSome<string>("_symbol");
@@ -69,17 +64,15 @@ export function symbol(): string {
   return symbol;
 }
 
-/*
-  decimals
-  Returns the number of decimals the token uses - e.g. 8, means to divide the
-    token amount by 100000000 to get its user representation.
-
-  OPTIONAL - This method can be used to improve usability, but interfaces and
-             other contracts MUST NOT expect these values to be present.
-
-  function decimals() public view returns (uint8)
+/**
+ * Returns the number of decimals the token uses - ie. 8 - means to divide the
+ * token amount by 100000000 (10^8) to get its user representation.
+ *
+ * OPTIONAL - This method can be used to improve usability, but interfaces and
+ *            other contracts MUST NOT expect these values to be present.
+ *
+ * @returns The number of decimals the token uses
 */
-
 export function decimals(): u8 {
   // if decimals has been customized, use it.  otherwise use default
   const decimals: u8 = storage.getSome<u8>("_decimals");
@@ -92,12 +85,10 @@ export function decimals(): u8 {
 // ----------------------------------------------------------------------------
 
 /**
- * totalSupply
  * Returns the total token supply.
  *
- * function totalSupply() public view returns (uint256)
+ * @returns The total token supply
  */
-
 export function totalSupply(): u128 {
   // if totalSupply has been customized, use it.  otherwise use default
   const totalSupply: u128 = storage.getSome<u128>("_totalSupply");
@@ -106,13 +97,10 @@ export function totalSupply(): u128 {
 }
 
 /**
- * balanceOf
- * Returns the account balance of another account with address _owner.
+ * Returns the account balance of another account with address `owner`.
  *
- * function balanceOf(address _owner) public view returns (uint256 balance)
- *
- * @param _owner The address from which the balance will be retrieved
- * @return The balance
+ * @param owner The address from which the balance will be retrieved
+ * @returns The balance for a given account
  */
 export function balanceOf(owner: string): u128 {
   DEBUG ? logging.log("[call] balanceOf(" + owner + ")") : false;
@@ -128,20 +116,16 @@ export function balanceOf(owner: string): u128 {
 }
 
 /**
- * transfer
- * Transfers _value amount of tokens to address _to, and MUST fire the Transfer
- * event. The function SHOULD throw if the message caller’s account balance
+ * Transfers `value` amount of tokens to address `to`, and MUST fire the Transfer
+ * event. The function SHOULD throw if the message caller's account balance
  * does not have enough tokens to spend.
  *
  * Note Transfers of 0 values MUST be treated as normal transfers and fire the
  * Transfer event.
  *
- * function transfer(address _to, uint256 _value) public returns (bool success)
- *
- * @notice send `value` token to `to` from `context.sender`
  * @param to The address of the recipient
  * @param value The amount of token to be transferred
- * @return Whether the transfer was successful or not
+ * @returns Whether the transfer was successful or not
  */
 export function transfer(to: string, value: u128): boolean {
   DEBUG ? logging.log("[call] transfer(" + to + ", " + value.toString() + ")") : false;
@@ -172,7 +156,6 @@ export function transfer(to: string, value: u128): boolean {
 }
 
 /**
- * transferFrom
  * Transfers `value` amount of tokens from address `from` to address `to`, and
  * MUST fire the `Transfer` event.
  *
@@ -184,8 +167,6 @@ export function transfer(to: string, value: u128): boolean {
  *
  * Note Transfers of 0 values MUST be treated as normal transfers and fire the
  * Transfer event.
- *
- * function transferFrom(address _from, address _to, uint256 _value) public returns
  *
  * @param from The address of the sender
  * @param to The address of the recipient
@@ -225,7 +206,6 @@ export function transferFrom(from: string, to: string, value: u128): boolean {
 }
 
 /**
- * approve
  * Allows `spender` to withdraw from your account multiple times, up to the
  * `value` amount. If this function is called again it overwrites the current
  * allowance with `value`.
@@ -235,8 +215,6 @@ export function transferFrom(from: string, to: string, value: u128): boolean {
  * they set the allowance first to 0 before setting it to another value for the
  * same spender. THOUGH The contract itself shouldn’t enforce it, to allow
  * backwards compatibility with contracts deployed before
- *
- * function approve(address _spender, uint256 _value) public returns (bool success)
  *
  * @param address The address of the account able to transfer the tokens
  * @param value The amount of tokens to be approved for transfer
@@ -266,14 +244,11 @@ export function approve(spender: string, value: u128): boolean {
 }
 
 /**
- * allowance
  * Returns the amount which `spender` is still allowed to withdraw from `owner`.
- *
- * function allowance(address _owner, address _spender) public view returns (uint256 remaining)
  *
  * @param owner The address of the account owning tokens
  * @param spender The address of the account able to transfer the tokens
- * @return Amount of remaining tokens allowed to spent
+ * @returns Amount of remaining tokens allowed to spent
 */
 export function allowance(owner: string, spender: string): u128 {
   DEBUG ? logging.log("[call] allowance(" + owner + ", " + spender + ")") : false;
@@ -299,7 +274,9 @@ function decrementAllowance(owner: string, spender: string, spent: u128): void {
 
 /**
  * Helper function to standardize the mapping
- * This function would not be needed if we could embed a PersistentMap as the value of another PersistentMap
+ *
+ * This function would not be needed if we could embed a PersistentMap as
+ * the value of another PersistentMap
  *
  * @param owner of the account from which tokens will be spent
  * @param spender of the tokens in the owners account
@@ -339,10 +316,11 @@ const allowances = new PersistentMap<string, u128>("alw"); // map[owner:spender]
  *
  * THIS IS NOT part of the ERC-20 spec
  *
- * @param name of the token
- * @param symbol for the token
- * @param decimals places used when rendering the token
- * @param supply of the tokens in total at launch
+ * @param name The name of the token
+ * @param symbol The symbol for the token
+ * @param decimals The number of decimal places used when rendering the token
+ * @param supply The total supply of the tokens
+ * @param exchangeRate The exchange rate of tokens
  */
 
 function _customize(
@@ -380,7 +358,6 @@ export function customize(): void {
  *
  * THIS IS NOT part of the ERC-20 spec
  */
-
 export function initialize(): void {
   DEBUG ? logging.log("[call] initialize()") : false;
 
@@ -399,10 +376,12 @@ export function initialize(): void {
 }
 
 /**
- * a guard clause to prevent any account but the token contract itself from
+ * A guard clause to prevent any account but the token contract itself from
  * invoking some methods
  *
  * THIS IS NOT part of the ERC-20 spec
+ *
+ * @returns The string representation of the contract `owner`
  */
 function assertTrueOwner(): string {
   // only allow the contract account to invoke this guard clause
