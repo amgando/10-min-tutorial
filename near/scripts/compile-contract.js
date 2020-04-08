@@ -2,8 +2,8 @@
 
 const compile = require("near-sdk-as/compiler").compile
 
-compile("contract/testContract.ts", // input file
-  "out/testContract.wasm", // output file
+compile("contract/erc20.ts", // input file
+  "out/erc20.wasm", // output file
   [
     //   "-O1",               // Optional arguments
     // "--log-level 3", // Optional arguments
