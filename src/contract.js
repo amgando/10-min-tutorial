@@ -1,61 +1,111 @@
-/* eslint-disable no-undef */
-export async function deployContract() {
-  const userAccount = await new nearlib.Account(window.near.connection, window.wallet.getAccountId());
-  let userAccountState = await userAccount.state();
+import * as nearlib from "nearlib"
 
-  console.log(userAccountState)
+const TOKEN_CONTRACT = "/erc20.wasm"
 
-  // const contractAccount = ;
-  // await userAccount.addKey(keyPair.getPublicKey(), contractAccount, '', 10000000);
+// Steps:
+// 1. deploy
+// 2. call `customize` (must happen _before_ calling `initialize`)
+// 3. call `initialize`
+// 4. return contract for storage (or assign to localstorage?)
 
-  const contractAccountId = `example-erc20-${+new Date()}`;
-  console.log(`contract account id: [${contractAccountId}]`)
+export async function deployAndSetupContract(config) {
+  const account = await makeContractAccount()
 
-  const contractKeyPair = nearlib.utils.KeyPair.fromRandom('ed25519');
-  console.log(`new keypair created. public key: [${contractKeyPair.getPublicKey().toString()}]`)
+  await deployContract(account)
+  await customizeContract(account, config)
+  await initializeContract(account)
+
+  return await getContract(account.accountId)
+}
+
+const logExplorerLink = (message, hash) => {
+  const explorer = "https://explorer.nearprotocol.com"
+  const tx = "transactions"
+  console.info(message)
+  console.info(`${explorer}/${tx}/${hash}`)
+}
+
+async function makeContractAccount() {
+  const contractAccountId = `example-erc20-${+new Date()}`
+  const contractKeyPair = nearlib.utils.KeyPair.fromRandom("ed25519")
+
+  console.info(`contract account id: [${contractAccountId}]`)
+  console.info(
+    `new keypair created. public key: [${contractKeyPair
+      .getPublicKey()
+      .toString()}]`
+  )
 
   /**
    * https://github.com/near/near-api-js/blob/master/src.ts/near.ts#L41
    */
-  const contractAccount = await window.near.createAccount(contractAccountId, contractKeyPair.getPublicKey());
-  console.log(contractAccount.accountId)
+  const contractAccount = await window.near.createAccount(
+    contractAccountId,
+    contractKeyPair.getPublicKey()
+  )
 
-  await window.near.connection.signer.keyStore.setKey(window.near.config.networkId, contractAccount.accountId, contractKeyPair);
+  await window.near.connection.signer.keyStore.setKey(
+    window.near.config.networkId,
+    contractAccount.accountId,
+    contractKeyPair
+  )
 
-
-  let explorer = "https://explorer.nearprotocol.com"
-  let tx = "transactions"
-
-  // TODO: this is failing. nearlib deploying contracts is throwing this error:
-  // Error:  { Error: Transaction CqjTnoActmCAq9Xt6uD8UmCnWzSgiVv3fz62fa71gDfD failed.
-  // PrepareError: Error happened while deserializing the module.
-  // from:
-  // https://github.com/metanear/metanear-web/blob/master/src/Home.js#L89
-  const TOKEN_CONTRACT = '/erc20.wasm'
-  let data = await fetch(TOKEN_CONTRACT);
-  console.log("deployContract -> data", data)
-  let buf = await data.arrayBuffer();
-  // console.log(buf)
-
-  let response = await contractAccount.deployContract(new Uint8Array(buf));
-  // let response = await contractAccount.deployContract(contractWASM);
-
-  console.log("contract deployed.")
-  console.log(`${explorer}/${tx}/${response.transaction.hash}`)
-
-  window.response = await contractAccount.functionCall(contractAccount.accountId, 'sayHello', {}, "10000000000000");
-  console.log("function [sayHello] called.")
-  console.log(`${explorer}/${tx}/${window.response.transaction.hash}`)
+  return contractAccount
 }
 
-export async function getContract() {
+async function loadCompiledContract() {
+  // taken from:
+  // https://github.com/metanear/metanear-web/blob/master/src/Home.js#L89
+  const data = await fetch(TOKEN_CONTRACT)
+  const buf = await data.arrayBuffer()
+  return new Uint8Array(buf)
+}
 
-  const contractName = 'example-erc20-1586010160192'
+async function deployContract(account) {
+  const compiledContract = await loadCompiledContract()
+  const response = await account.deployContract(compiledContract)
+  logExplorerLink("contract deployed", response.transaction.hash)
+}
 
-  // Initializing our contract APIs by contract name and configuration.
-  window.contract = await near.loadContract(contractName, {
-    viewMethods: ['name', 'symbol', 'balanceOf'],
-    // changeMethods: ['incrementCounter', 'decrementCounter', 'resetCounter'],
-    sender: window.wallet.getAccountId()
-  });
+async function customizeContract(account, config) {
+  const gas = "10000000000000"
+  const customizeResponse = await account.functionCall(
+    account.accountId,
+    "customize",
+    {}, // TODO: pass args to customize to set name, symbol, etc.
+    gas
+  )
+  logExplorerLink(
+    "function [customize] called",
+    customizeResponse.transaction.hash
+  )
+}
+
+async function initializeContract(account) {
+  const gas = "10000000000000"
+  const initializeResponse = await account.functionCall(
+    account.accountId,
+    "initialize",
+    {},
+    gas
+  )
+  logExplorerLink(
+    "function [initialize] called",
+    initializeResponse.transaction.hash
+  )
+}
+
+export async function getContract(contractName) {
+  return await window.near.loadContract(contractName, {
+    viewMethods: [
+      "name",
+      "symbol",
+      "decimals",
+      "totalSupply",
+      "balanceOf",
+      "allowance",
+    ],
+    changeMethods: ["transfer", "transferFrom", "approve"],
+    sender: window.wallet.getAccountId(),
+  })
 }

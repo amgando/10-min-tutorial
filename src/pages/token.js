@@ -20,7 +20,7 @@ import TransferTokens from "../components/token/transfer-tokens"
 import AllowanceTransfers from "../components/token/allowance-transfers"
 
 import { decimalize } from "../utils"
-import { deployContract, getContract } from "../contract"
+import { deployAndSetupContract } from "../contract"
 
 import { token as demo } from "../data/demos"
 import accounts from "../data/accounts"
@@ -97,10 +97,8 @@ export default class TokenDemo extends React.Component {
   }
 
   async deployToken() {
-    // TODO: implement actual deployment functionality
     try {
-      await deployContract()
-      // await getContract()
+      window.contract = await deployAndSetupContract(this.token)
     } catch (error) {
       console.error("TokenDemo -> deployToken -> error", error)
     }
