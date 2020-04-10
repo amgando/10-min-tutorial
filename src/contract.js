@@ -1,6 +1,8 @@
 import * as nearlib from "nearlib"
+import _ from "lodash"
 
 const TOKEN_CONTRACT = "/erc20.wasm"
+const DEFAULT_GAS = "10000000000000"
 
 // Steps:
 // 1. deploy
@@ -27,30 +29,38 @@ const logExplorerLink = (message, hash) => {
 
 async function makeContractAccount() {
   const contractAccountId = `example-erc20-${+new Date()}`
-  const contractKeyPair = nearlib.utils.KeyPair.fromRandom("ed25519")
-
   console.info(`contract account id: [${contractAccountId}]`)
-  console.info(
-    `new keypair created. public key: [${contractKeyPair
-      .getPublicKey()
-      .toString()}]`
-  )
+
+  return await makeAccount(contractAccountId)
+}
+
+export async function makeAccount(accountId) {
+  const keyPair = nearlib.utils.KeyPair.fromRandom("ed25519")
 
   /**
    * https://github.com/near/near-api-js/blob/master/src.ts/near.ts#L41
    */
-  const contractAccount = await window.near.createAccount(
-    contractAccountId,
-    contractKeyPair.getPublicKey()
-  )
+  let account
+  try {
+    account = await window.near.createAccount(
+      accountId,
+      keyPair.getPublicKey()
+    )
+  } catch (error) {
+    if (/it already exists/.test(error.message)) {
+      account = await window.near.account(accountId)
+    } else {
+      throw error
+    }
+  }
 
   await window.near.connection.signer.keyStore.setKey(
     window.near.config.networkId,
-    contractAccount.accountId,
-    contractKeyPair
+    account.accountId,
+    keyPair
   )
 
-  return contractAccount
+  return account
 }
 
 async function loadCompiledContract() {
@@ -68,12 +78,11 @@ async function deployContract(account) {
 }
 
 async function customizeContract(account, config) {
-  const gas = "10000000000000"
   const customizeResponse = await account.functionCall(
     account.accountId,
     "customize",
     {}, // TODO: pass args to customize to set name, symbol, etc.
-    gas
+    DEFAULT_GAS
   )
   logExplorerLink(
     "function [customize] called",
@@ -82,12 +91,11 @@ async function customizeContract(account, config) {
 }
 
 async function initializeContract(account) {
-  const gas = "10000000000000"
   const initializeResponse = await account.functionCall(
     account.accountId,
     "initialize",
     {},
-    gas
+    DEFAULT_GAS
   )
   logExplorerLink(
     "function [initialize] called",
@@ -95,8 +103,8 @@ async function initializeContract(account) {
   )
 }
 
-export async function getContract(contractName) {
-  return await window.near.loadContract(contractName, {
+export async function getContract(contractAccountId) {
+  return await window.near.loadContract(contractAccountId, {
     viewMethods: [
       "name",
       "symbol",
@@ -106,6 +114,37 @@ export async function getContract(contractName) {
       "allowance",
     ],
     changeMethods: ["transfer", "transferFrom", "approve"],
-    sender: window.wallet.getAccountId(),
+    // sender: window.wallet.getAccountId(),
+    sender: contractAccountId,
   })
 }
+
+export async function balanceOf({ owner }) {
+  return await window.contract.balanceOf({ owner })
+}
+
+export async function transfer({ from, to, amount }) {
+  const transferParams = { to, value: _.toString(amount) }
+  if (from === "bank") {
+    return await window.contract.transfer(transferParams)
+  }
+  // otherwise use 'from' as the sender
+  const fromAccountSignedContract = await window.near.loadContract(window.contract.contractId, {
+    changeMethods: ["transfer"],
+    // sender: window.wallet.getAccountId(),
+    sender: from,
+  })
+  return await fromAccountSignedContract.transfer(transferParams)
+  // return await window.contract.account.functionCall(
+  //   from,
+  //   "transfer",
+  //   transferParams,
+  //   DEFAULT_GAS
+  // )
+}
+
+export async function transferFrom({ from, to, value }) {}
+
+export async function approve({ spender, value }) {}
+
+export async function allowance({ owner, spender }) {}
