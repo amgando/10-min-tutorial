@@ -20,7 +20,7 @@ import TransferTokens from "../components/token/transfer-tokens"
 import AllowanceTransfers from "../components/token/allowance-transfers"
 
 import { decimalize } from "../utils"
-import { deployAndSetupContract } from "../contract"
+import { deployAndSetupContract, transfer, makeAccount } from "../contract"
 
 import { token as demo } from "../data/demos"
 import accounts from "../data/accounts"
@@ -46,7 +46,12 @@ export default class TokenDemo extends React.Component {
     }))
 
     // TODO: refactor to use useState React hook
-    this.state = { steps, token: defaultToken, accounts }
+    this.state = {
+      steps,
+      token: defaultToken,
+      accounts,
+      isDeploying: false,
+    }
     this.nextStep = this.nextStep.bind(this)
     this.saveToken = this.saveToken.bind(this)
     this.deployToken = this.deployToken.bind(this)
@@ -97,11 +102,17 @@ export default class TokenDemo extends React.Component {
   }
 
   async deployToken() {
+    this.setState({ isDeploying: true })
     try {
       window.contract = await deployAndSetupContract(this.token)
+      window.accounts = {
+        alice: await makeAccount('alice'),
+        bob: await makeAccount('bob'),
+      }
     } catch (error) {
       console.error("TokenDemo -> deployToken -> error", error)
     }
+    this.setState({ isDeploying: false })
 
     const { token, accounts } = this.state
     token.deployed = true
@@ -110,7 +121,9 @@ export default class TokenDemo extends React.Component {
     this.nextStep()
   }
 
-  transfer({ from, to, amount }) {
+  async transfer({ from, to, amount }) {
+    await transfer({ from, to, amount })
+
     // TODO: implement actual transfer functionality
     accounts[from].balance = accounts[from].balance - amount
     accounts[to].balance = accounts[to].balance + amount
@@ -152,7 +165,7 @@ export default class TokenDemo extends React.Component {
       // Step 1: configure token
       <ConfigureToken token={this.state.token} onSave={this.saveToken} />,
       // Step 2: deploy token
-      <DeployToken token={this.state.token} onDeploy={this.deployToken} />,
+      <DeployToken token={this.state.token} isDeploying={this.state.isDeploying} onDeploy={this.deployToken} />,
       // Step 3.1: use token: allocate tokens to user
       <AllocateTokens
         token={this.state.token}
