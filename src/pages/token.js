@@ -105,14 +105,16 @@ export default class TokenDemo extends React.Component {
     try {
       const contract = await deployAndSetupContract(this.token)
       window.contract = contract
+      console.log("TokenDemo -> deployToken -> contract", contract)
 
       const { token, accounts } = this.state
       token.deployed = true
       token.contractId = contract.contractId
-      accounts.bank.balance = contract.totalSupply()
+      accounts.bank.balance = await contract.totalSupply()
       this.setState({ token, accounts })
 
-      this.createUserAccountsInBackground()
+      // FIXME: sometimes this fails on TESTNET :(
+      // this.createUserAccountsInBackground()
 
       this.nextStep()
     } catch (error) {
@@ -128,6 +130,7 @@ export default class TokenDemo extends React.Component {
         try {
           const { account, contract } = await makeAccountWithContract(id)
           accounts[id].nearAccount = account
+          accounts[id].nearAccountId = accounts.accountId
           accounts[id].nearContract = contract
           this.setState({ accounts })
         } catch (error) {
@@ -139,7 +142,8 @@ export default class TokenDemo extends React.Component {
   }
 
   async transfer({ from, to, amount }) {
-    await transfer({ from, to, amount })
+    const contract = accounts[from].nearContract
+    await transfer(contract, { to, amount })
 
     // TODO: implement actual transfer functionality
     accounts[from].balance = accounts[from].balance - amount

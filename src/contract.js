@@ -6,13 +6,14 @@ const CONTRACT_ID = "example-erc20"
 const DEFAULT_GAS = "10000000000000"
 
 // Steps:
-// 1. deploy
-// 2. call `customize` (must happen _before_ calling `initialize`)
-// 3. call `initialize`
-// 4. return contract for storage (or assign to localstorage?)
+// 1. create new account (to own contract)
+// 2. deploy contract to account
+// 3. call `customize` (must happen _before_ calling `initialize`)
+// 4. call `initialize`
+// 5. store contract
+// 6. create user accounts (alice, bob, carol)
 
-// DEBUG
-window.nearlib = nearlib
+let baseContract
 
 const logExplorerLink = (message, hash) => {
   const explorer = "https://explorer.nearprotocol.com"
@@ -24,15 +25,17 @@ const logExplorerLink = (message, hash) => {
 const makeUniqueId = id => `${id}-${+new Date()}`
 
 export async function deployAndSetupContract(config) {
+  // FIXME: creating new accounts fails on TESTNET when Funnel account "test"
+  // doesn't have enough NEAR tokens :(
+  // API returns 400 `Error: Sender "test" does not have enough balance`
   const account = await makeAccount(makeUniqueId(CONTRACT_ID))
-  // const account = window.wallet.account()
-  console.log("deployAndSetupContract -> account", account)
 
   await deployContract(account)
   await customizeContract(account, config)
   await initializeContract(account)
 
-  return await getContract(account.accountId)
+  baseContract = await getContract(account.accountId)
+  return baseContract
 }
 
 export async function makeAccountWithContract(id) {
@@ -101,7 +104,7 @@ async function initializeContract(account) {
   )
 }
 
-export async function getContract(contractAccountId) {
+export async function getContract(contractAccountId, senderAccountId) {
   return await window.near.loadContract(contractAccountId, {
     viewMethods: [
       "name",
@@ -112,41 +115,21 @@ export async function getContract(contractAccountId) {
       "allowance",
     ],
     changeMethods: ["transfer", "transferFrom", "approve"],
-    // sender: window.wallet.getAccountId(),
-    sender: contractAccountId,
+    sender: senderAccountId || window.wallet.getAccountId(),
   })
 }
 
-export async function balanceOf({ owner }) {
-  return await window.contract.balanceOf({ owner })
+export async function balanceOf(contract, { owner }) {
+  return await contract.balanceOf({ owner })
 }
 
-export async function transfer(contract, { from, to, amount }) {
+export async function transfer(contract, { to, amount }) {
   const transferParams = { to, value: _.toString(amount) }
   return await contract.transfer(transferParams)
-  // if (from === "bank") {
-  //   return await window.contract.transfer(transferParams)
-  // }
-  // // otherwise use 'from' as the sender
-  // const fromAccountSignedContract = await window.near.loadContract(
-  //   window.contract.contractId,
-  //   {
-  //     changeMethods: ["transfer"],
-  //     sender: window.wallet.getAccountId(),
-  //     sender: from,
-  //   }
-  // )
-  // return await fromAccountSignedContract.transfer(transferParams)
-  // return await window.contract.account.functionCall(
-  //   from,
-  //   "transfer",
-  //   transferParams,
-  //   DEFAULT_GAS
-  // )
 }
 
-export async function transferFrom({ from, to, value }) {}
+export async function transferFrom(contract, { from, to, value }) {}
 
-export async function approve({ spender, value }) {}
+export async function approve(contract, { spender, value }) {}
 
-export async function allowance({ owner, spender }) {}
+export async function allowance(contract, { owner, spender }) {}
