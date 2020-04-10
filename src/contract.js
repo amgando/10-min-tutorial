@@ -2,6 +2,7 @@ import * as nearlib from "nearlib"
 import _ from "lodash"
 
 const TOKEN_CONTRACT = "/erc20.wasm"
+const CONTRACT_ID = "example-erc20"
 const DEFAULT_GAS = "10000000000000"
 
 // Steps:
@@ -10,15 +11,8 @@ const DEFAULT_GAS = "10000000000000"
 // 3. call `initialize`
 // 4. return contract for storage (or assign to localstorage?)
 
-export async function deployAndSetupContract(config) {
-  const account = await makeContractAccount()
-
-  await deployContract(account)
-  await customizeContract(account, config)
-  await initializeContract(account)
-
-  return await getContract(account.accountId)
-}
+// DEBUG
+window.nearlib = nearlib
 
 const logExplorerLink = (message, hash) => {
   const explorer = "https://explorer.nearprotocol.com"
@@ -27,32 +21,35 @@ const logExplorerLink = (message, hash) => {
   console.info(`${explorer}/${tx}/${hash}`)
 }
 
-async function makeContractAccount() {
-  const contractAccountId = `example-erc20-${+new Date()}`
-  console.info(`contract account id: [${contractAccountId}]`)
+const makeUniqueId = id => `${id}-${+new Date()}`
 
-  return await makeAccount(contractAccountId)
+export async function deployAndSetupContract(config) {
+  const account = await makeAccount(makeUniqueId(CONTRACT_ID))
+  // const account = window.wallet.account()
+  console.log("deployAndSetupContract -> account", account)
+
+  await deployContract(account)
+  await customizeContract(account, config)
+  await initializeContract(account)
+
+  return await getContract(account.accountId)
+}
+
+export async function makeAccountWithContract(id) {
+  const account = await makeAccount(makeUniqueId(id))
+  const contract = await getContract(account.accountId)
+
+  return { account, contract }
 }
 
 export async function makeAccount(accountId) {
+  console.info(`Making account with id: ${accountId}...`)
   const keyPair = nearlib.utils.KeyPair.fromRandom("ed25519")
 
   /**
    * https://github.com/near/near-api-js/blob/master/src.ts/near.ts#L41
    */
-  let account
-  try {
-    account = await window.near.createAccount(
-      accountId,
-      keyPair.getPublicKey()
-    )
-  } catch (error) {
-    if (/it already exists/.test(error.message)) {
-      account = await window.near.account(accountId)
-    } else {
-      throw error
-    }
-  }
+  const account = await window.near.createAccount(accountId, keyPair.getPublicKey())
 
   await window.near.connection.signer.keyStore.setKey(
     window.near.config.networkId,
@@ -60,6 +57,7 @@ export async function makeAccount(accountId) {
     keyPair
   )
 
+  console.info(`Account created! [${accountId}]`)
   return account
 }
 
@@ -123,18 +121,22 @@ export async function balanceOf({ owner }) {
   return await window.contract.balanceOf({ owner })
 }
 
-export async function transfer({ from, to, amount }) {
+export async function transfer(contract, { from, to, amount }) {
   const transferParams = { to, value: _.toString(amount) }
-  if (from === "bank") {
-    return await window.contract.transfer(transferParams)
-  }
-  // otherwise use 'from' as the sender
-  const fromAccountSignedContract = await window.near.loadContract(window.contract.contractId, {
-    changeMethods: ["transfer"],
-    // sender: window.wallet.getAccountId(),
-    sender: from,
-  })
-  return await fromAccountSignedContract.transfer(transferParams)
+  return await contract.transfer(transferParams)
+  // if (from === "bank") {
+  //   return await window.contract.transfer(transferParams)
+  // }
+  // // otherwise use 'from' as the sender
+  // const fromAccountSignedContract = await window.near.loadContract(
+  //   window.contract.contractId,
+  //   {
+  //     changeMethods: ["transfer"],
+  //     sender: window.wallet.getAccountId(),
+  //     sender: from,
+  //   }
+  // )
+  // return await fromAccountSignedContract.transfer(transferParams)
   // return await window.contract.account.functionCall(
   //   from,
   //   "transfer",

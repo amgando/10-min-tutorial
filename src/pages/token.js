@@ -2,9 +2,7 @@ import React from "react"
 import {
   Grid,
   Container,
-  Icon,
   Header,
-  Label,
   Transition,
   Segment,
 } from "semantic-ui-react"
@@ -18,9 +16,10 @@ import DeployToken from "../components/token/deploy-token"
 import AllocateTokens from "../components/token/allocate-tokens"
 import TransferTokens from "../components/token/transfer-tokens"
 import AllowanceTransfers from "../components/token/allowance-transfers"
+import SavedTokenHeader from "../components/token/saved-token-header"
 
 import { decimalize } from "../utils"
-import { deployAndSetupContract, transfer, makeAccount } from "../contract"
+import { deployAndSetupContract, transfer, makeAccountWithContract } from "../contract"
 
 import { token as demo } from "../data/demos"
 import accounts from "../data/accounts"
@@ -104,21 +103,39 @@ export default class TokenDemo extends React.Component {
   async deployToken() {
     this.setState({ isDeploying: true })
     try {
-      window.contract = await deployAndSetupContract(this.token)
-      window.accounts = {
-        alice: await makeAccount('alice'),
-        bob: await makeAccount('bob'),
-      }
+      const contract = await deployAndSetupContract(this.token)
+      window.contract = contract
+
+      const { token, accounts } = this.state
+      token.deployed = true
+      token.contractId = contract.contractId
+      accounts.bank.balance = contract.totalSupply()
+      this.setState({ token, accounts })
+
+      this.createUserAccountsInBackground()
+
+      this.nextStep()
     } catch (error) {
       console.error("TokenDemo -> deployToken -> error", error)
     }
     this.setState({ isDeploying: false })
+  }
 
-    const { token, accounts } = this.state
-    token.deployed = true
-    accounts.bank.balance = token.supply
-    this.setState({ token, accounts })
-    this.nextStep()
+  createUserAccountsInBackground() {
+    const { accounts } = this.state
+    Object.values(accounts).forEach(async ({ id, type }) => {
+      if (type === 'person') {
+        try {
+          const { account, contract } = await makeAccountWithContract(id)
+          accounts[id].nearAccount = account
+          accounts[id].nearContract = contract
+          this.setState({ accounts })
+        } catch (error) {
+          console.error(error)
+          alert('Oops. Something went wrong. Please refresh and start over.')
+        }
+      }
+    })
   }
 
   async transfer({ from, to, amount }) {
@@ -136,28 +153,6 @@ export default class TokenDemo extends React.Component {
 
   decrementAllowance({ owner, spender, spent }) {
     // TODO: implement actual decrement functionality
-  }
-
-  get savedTokenComponent() {
-    const { token } = this.state
-    return (
-      <Segment inverted>
-        <Header as="h2" inverted color="grey">
-          {token.deployed && (
-            <Label attached="top right" color="green" size="large" horizontal>
-              DEPLOYED
-            </Label>
-          )}
-          <Icon name="dot circle outline" />
-          <Header.Content>
-            {token.name}
-            <Header.Subheader>
-              [{token.symbol}]: {this.totalTokenSupply}
-            </Header.Subheader>
-          </Header.Content>
-        </Header>
-      </Segment>
-    )
   }
 
   get stepComponent() {
@@ -214,7 +209,7 @@ export default class TokenDemo extends React.Component {
                   animation="scale"
                   duration={500}
                 >
-                  {this.savedTokenComponent}
+                  <SavedTokenHeader token={this.state.token} />
                 </Transition>
                 {/* {this.state.token.saved && this.savedToken} */}
                 <Transition.Group
