@@ -25,7 +25,7 @@ export default function Icon({ icon, text }) {
 
   return (
     <div className="ui large image label">
-      <img src={iconImg} />
+      <img src={iconImg} alt={`${icon} icon`} />
       {text}
     </div>
   )

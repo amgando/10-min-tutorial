@@ -11,7 +11,7 @@ const ConfigureToken = ({ token, onSave }) => {
       <Header dividing>ERC-20 Token Configuration</Header>
       <Form.Group>
         <Form.Field width={7}>
-          <label>
+          <label htmlFor="name">
             Token Name
             <Input
               type="text"
@@ -22,7 +22,7 @@ const ConfigureToken = ({ token, onSave }) => {
           </label>
         </Form.Field>
         <Form.Field width={2}>
-          <label>
+          <label htmlFor="symbol">
             Symbol
             <Input
               type="text"
@@ -33,7 +33,7 @@ const ConfigureToken = ({ token, onSave }) => {
           </label>
         </Form.Field>
         <Form.Field width={2}>
-          <label>
+          <label htmlFor="decimals">
             Decimals
             <Input
               type="number"
@@ -44,7 +44,7 @@ const ConfigureToken = ({ token, onSave }) => {
           </label>
         </Form.Field>
         <Form.Field width={4}>
-          <label>
+          <label htmlFor="supply">
             Total Supply
             <Input
               type="number"

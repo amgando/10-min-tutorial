@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Card, Icon, Image, Transition } from "semantic-ui-react"
+import { Card, Icon, Transition } from "semantic-ui-react"
 
 const iconForType = type =>
   ({
@@ -9,9 +9,9 @@ const iconForType = type =>
 
 const AccountCard = ({ id, name, balance, type }) => {
   const [toggled, setToggled] = useState(true)
-  useEffect(() => {
-    setToggled(!toggled)
-  }, [balance])
+  const toggle = () => setToggled(!toggled)
+
+  useEffect(toggle, [balance])
 
   return (
     <Card>
@@ -22,7 +22,7 @@ const AccountCard = ({ id, name, balance, type }) => {
             {balance}
           </Card.Header>
         </Transition>
-        <Card.Meta>{name}</Card.Meta>
+        <Card.Meta>{name}<br />@{id}</Card.Meta>
       </Card.Content>
       <Card.Content extra>
         <Icon name={iconForType(type)} />

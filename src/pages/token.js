@@ -15,15 +15,15 @@ import SavedTokenHeader from "../components/token/saved-token-header"
 import { decimalize } from "../utils"
 import {
   mockDeployAndSetupContract,
-  deployAndSetupContract,
+  // deployAndSetupContract,
   mockMakeAccountWithContract,
-  makeAccountWithContract,
+  // makeAccountWithContract,
   mockTransfer,
-  transfer,
+  // transfer,
   mockTransferFrom,
-  transferFrom,
+  // transferFrom,
   mockApprove,
-  approve,
+  // approve,
 } from "../contract"
 
 import { token as demo } from "../data/demos"
@@ -111,7 +111,6 @@ export default class TokenDemo extends React.Component {
       // TODO: re-enable actual deploy/setup contract
       // const contract = await deployAndSetupContract(this.state.token)
       const contract = mockDeployAndSetupContract(this.state.token)
-      console.log("TokenDemo -> deployToken -> contract", contract)
 
       const { token, accounts } = this.state
       token.deployed = true
@@ -151,7 +150,6 @@ export default class TokenDemo extends React.Component {
   async transfer({ from, to, amount }) {
     const { accounts } = this.state
     const contract = accounts[from].nearContract
-    console.log("transfer -> accounts", accounts)
 
     // TODO: re-enable actual transfer
     mockTransfer(contract, { to, amount })
@@ -220,7 +218,7 @@ export default class TokenDemo extends React.Component {
   render() {
     return (
       <Layout>
-        <Near onLoaded={console.log} />
+        <Near onLoaded={() => console.info("NEAR library loaded.")} />
         <Head title={demo.title} />
         <Container>
           <Grid padded>

@@ -14,8 +14,6 @@ const TransferTokens = ({ token, accounts, onTransfer, onContinue }) => {
       to: bob.id,
       amount: Number(amount),
     })
-    // TODO: log error event "insufficient funds"
-    setAmount(alice.balance * 5) // to trigger "insufficient funds"
     setCanContinue(true)
   }
 

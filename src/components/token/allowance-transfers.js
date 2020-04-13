@@ -110,9 +110,10 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
                 <Form onSubmit={handleApproval}>
                   <Form.Group inline>
                     <Form.Field>
-                      <label>
+                      <label htmlFor="amount">
                         <Input
                           type="number"
+                          name="amount"
                           value={allowanceAmount}
                           onChange={(_, { value }) => setAllowanceAmount(value)}
                         />
