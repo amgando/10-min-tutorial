@@ -1,11 +1,5 @@
 import React from "react"
-import {
-  Grid,
-  Container,
-  Header,
-  Transition,
-  Segment,
-} from "semantic-ui-react"
+import { Grid, Container, Header, Transition, Segment } from "semantic-ui-react"
 
 import Layout from "../components/layout"
 import Head from "../components/head"
@@ -19,7 +13,18 @@ import AllowanceTransfers from "../components/token/allowance-transfers"
 import SavedTokenHeader from "../components/token/saved-token-header"
 
 import { decimalize } from "../utils"
-import { deployAndSetupContract, transfer, makeAccountWithContract } from "../contract"
+import {
+  mockDeployAndSetupContract,
+  deployAndSetupContract,
+  mockMakeAccountWithContract,
+  makeAccountWithContract,
+  mockTransfer,
+  transfer,
+  mockTransferFrom,
+  transferFrom,
+  mockApprove,
+  approve,
+} from "../contract"
 
 import { token as demo } from "../data/demos"
 import accounts from "../data/accounts"
@@ -56,7 +61,7 @@ export default class TokenDemo extends React.Component {
     this.deployToken = this.deployToken.bind(this)
     this.transfer = this.transfer.bind(this)
     this.approve = this.approve.bind(this)
-    this.decrementAllowance = this.decrementAllowance.bind(this)
+    this.spendAllowance = this.spendAllowance.bind(this)
   }
 
   get activeStepIndex() {
@@ -103,18 +108,19 @@ export default class TokenDemo extends React.Component {
   async deployToken() {
     this.setState({ isDeploying: true })
     try {
-      const contract = await deployAndSetupContract(this.token)
-      window.contract = contract
+      // TODO: re-enable actual deploy/setup contract
+      // const contract = await deployAndSetupContract(this.state.token)
+      const contract = mockDeployAndSetupContract(this.state.token)
       console.log("TokenDemo -> deployToken -> contract", contract)
 
       const { token, accounts } = this.state
       token.deployed = true
       token.contractId = contract.contractId
+      accounts.bank.nearContract = contract
       accounts.bank.balance = await contract.totalSupply()
       this.setState({ token, accounts })
 
-      // FIXME: sometimes this fails on TESTNET :(
-      // this.createUserAccountsInBackground()
+      this.createUserAccountsInBackground({ contractId: contract.contractId })
 
       this.nextStep()
     } catch (error) {
@@ -123,40 +129,58 @@ export default class TokenDemo extends React.Component {
     this.setState({ isDeploying: false })
   }
 
-  createUserAccountsInBackground() {
+  createUserAccountsInBackground({ contractId }) {
     const { accounts } = this.state
     Object.values(accounts).forEach(async ({ id, type }) => {
-      if (type === 'person') {
+      if (type === "person") {
         try {
-          const { account, contract } = await makeAccountWithContract(id)
+          // TODO: re-enable actual acct creation
+          // const { account, contract } = await makeAccountWithContract(id, contractId)
+          const { account, contract } = mockMakeAccountWithContract(id, contractId)
           accounts[id].nearAccount = account
-          accounts[id].nearAccountId = accounts.accountId
           accounts[id].nearContract = contract
           this.setState({ accounts })
         } catch (error) {
           console.error(error)
-          alert('Oops. Something went wrong. Please refresh and start over.')
+          alert("Oops. Something went wrong. Please refresh and start over.")
         }
       }
     })
   }
 
   async transfer({ from, to, amount }) {
+    const { accounts } = this.state
     const contract = accounts[from].nearContract
-    await transfer(contract, { to, amount })
+    console.log("transfer -> accounts", accounts)
 
-    // TODO: implement actual transfer functionality
+    // TODO: re-enable actual transfer
+    mockTransfer(contract, { to, amount })
+    // await transfer(contract, { to, amount })
+
+    // TODO: reflect actual state change from NEAR RPC call
     accounts[from].balance = accounts[from].balance - amount
     accounts[to].balance = accounts[to].balance + amount
     this.setState({ accounts })
   }
 
   approve({ owner, spender, amount }) {
-    // TODO: implement actual approval functionality
+    const { accounts } = this.state
+    const contract = accounts[owner].nearContract
+
+    // TODO: use NEAR RPC call and reflect actual state change
+    mockApprove(contract, { spender, value: amount })
   }
 
-  decrementAllowance({ owner, spender, spent }) {
-    // TODO: implement actual decrement functionality
+  spendAllowance({ spender, from, to, amount }) {
+    const { accounts } = this.state
+    const contract = accounts[spender].nearContract
+
+    // TODO: use NEAR RPC call and reflect actual state change
+    mockTransferFrom(contract, { from, to, value: amount })
+
+    accounts[from].balance = accounts[from].balance - amount
+    accounts[to].balance = accounts[to].balance + amount
+    this.setState({ accounts })
   }
 
   get stepComponent() {
@@ -164,7 +188,11 @@ export default class TokenDemo extends React.Component {
       // Step 1: configure token
       <ConfigureToken token={this.state.token} onSave={this.saveToken} />,
       // Step 2: deploy token
-      <DeployToken token={this.state.token} isDeploying={this.state.isDeploying} onDeploy={this.deployToken} />,
+      <DeployToken
+        token={this.state.token}
+        isDeploying={this.state.isDeploying}
+        onDeploy={this.deployToken}
+      />,
       // Step 3.1: use token: allocate tokens to user
       <AllocateTokens
         token={this.state.token}
@@ -184,7 +212,7 @@ export default class TokenDemo extends React.Component {
         token={this.state.token}
         accounts={this.state.accounts}
         onApproval={this.approve}
-        onDecrement={this.decrementAllowance}
+        onSpend={this.spendAllowance}
       />,
     ]
   }
@@ -215,7 +243,6 @@ export default class TokenDemo extends React.Component {
                 >
                   <SavedTokenHeader token={this.state.token} />
                 </Transition>
-                {/* {this.state.token.saved && this.savedToken} */}
                 <Transition.Group
                   animation="fade"
                   duration={STEP_TRANSITION_DURATION}

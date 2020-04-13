@@ -11,14 +11,14 @@ import {
 
 import AccountCard from "../account-card"
 
-const AllowanceTransfers = ({ token, accounts, onApproval, onDecrement }) => {
+const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
   const { alice: owner, bob: spender, carol: receiver } = accounts
   const [allowance, setAllowance] = useState(null)
   const [allowanceChangeEvents, setAllowanceChangeEvents] = useState([])
   const [allowanceAmount, setAllowanceAmount] = useState(100)
   const [transferAmount, setTransferAmount] = useState(100)
   const [canAllow, setCanAllow] = useState(true)
-  const [canDecrement, setCanDecrement] = useState(false)
+  const [canSpend, setCanSpend] = useState(false)
 
   const registerAllowanceChange = () => {
     if (allowance === null) return
@@ -35,22 +35,24 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onDecrement }) => {
 
   const handleApproval = () => {
     const allowance = {
-      owner,
-      spender,
+      owner: owner.id,
+      spender: spender.id,
       amount: Number(allowanceAmount),
     }
     setAllowance(allowance)
     setCanAllow(false)
-    setCanDecrement(true)
+    setCanSpend(true)
     onApproval(allowance)
   }
 
-  const handleDecrement = () => {
+  const handleSpend = () => {
+    // TODO: make the allowance amount reflect actual state
     setAllowance({
       ...allowance,
       amount: allowance.amount - Number(transferAmount),
     })
-    onDecrement({
+    onSpend({
+      spender: spender.id,
       from: owner.id,
       to: receiver.id,
       amount: Number(transferAmount),
@@ -97,7 +99,7 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onDecrement }) => {
                 <List>
                   {allowanceChangeEvents.map((alw, index) =>
                     <List.Item key={index}>
-                      {alw.spender.name} is approved by {alw.owner.name} to xfer {alw.remaining}
+                      {alw.spender} is approved by {alw.owner} to xfer {alw.remaining}
                     </List.Item>
                   )}
                 </List>
@@ -129,7 +131,7 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onDecrement }) => {
           <Grid>
             <Grid.Row>
               <Grid.Column width={8}>
-                <Form onSubmit={handleDecrement}>
+                <Form onSubmit={handleSpend}>
                   <Form.Group>
                     <Form.Field>
                       <label>
@@ -141,7 +143,7 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onDecrement }) => {
                         />
                       </label>
                     </Form.Field>
-                    <Button primary type="submit" disabled={!canDecrement}>
+                    <Button primary type="submit" disabled={!canSpend}>
                       Transfer
                       <Icon name="arrow circle right" />
                     </Button>

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Grid, Header, Button, Icon, Label } from "semantic-ui-react"
+import { Grid, Header, Form, Input, Button, Icon } from "semantic-ui-react"
 
 import AccountCard from "../account-card"
 
@@ -10,8 +10,8 @@ const TransferTokens = ({ token, accounts, onTransfer, onContinue }) => {
 
   const handleTransfer = () => {
     onTransfer({
-      from: "alice",
-      to: "bob",
+      from: alice.id,
+      to: bob.id,
       amount: Number(amount),
     })
     // TODO: log error event "insufficient funds"
@@ -38,13 +38,22 @@ const TransferTokens = ({ token, accounts, onTransfer, onContinue }) => {
           <AccountCard {...alice} />
         </Grid.Column>
         <Grid.Column width={4}>
-          <Label size="huge" basic style={{ marginBottom: "1rem" }}>
-            {amount} ({token.symbol})
-          </Label>
-          <Button primary onClick={handleTransfer}>
-            Transfer
-            <Icon name="arrow circle right" />
-          </Button>
+          <Form onSubmit={handleTransfer}>
+            <Form.Field>
+              <label>
+                Amount ({token.symbol})
+                <Input
+                  type="number"
+                  value={amount}
+                  onChange={(_, { value }) => setAmount(value)}
+                />
+              </label>
+            </Form.Field>
+            <Button primary type="submit">
+              Transfer
+              <Icon name="arrow circle right" />
+            </Button>
+          </Form>
         </Grid.Column>
         <Grid.Column width={6}>
           <AccountCard {...bob} />

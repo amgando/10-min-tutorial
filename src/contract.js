@@ -5,6 +5,17 @@ const TOKEN_CONTRACT = "/erc20.wasm"
 const CONTRACT_ID = "example-erc20"
 const DEFAULT_GAS = "10000000000000"
 
+const log = message => console.info(message)
+
+const logExplorerLink = (message, hash) => {
+  const explorer = "https://explorer.nearprotocol.com"
+  const tx = "transactions"
+  log(message)
+  log(`${explorer}/${tx}/${hash}`)
+}
+
+const makeUniqueId = id => `${id}-${+new Date()}`
+
 // Steps:
 // 1. create new account (to own contract)
 // 2. deploy contract to account
@@ -12,18 +23,24 @@ const DEFAULT_GAS = "10000000000000"
 // 4. call `initialize`
 // 5. store contract
 // 6. create user accounts (alice, bob, carol)
-
 let baseContract
 
-const logExplorerLink = (message, hash) => {
-  const explorer = "https://explorer.nearprotocol.com"
-  const tx = "transactions"
-  console.info(message)
-  console.info(`${explorer}/${tx}/${hash}`)
+// Exports
+// (with mocks)
+// TODO: replace mocks w/ real functions
+
+export function mockDeployAndSetupContract(config) {
+  log("IN mockDeployAndSetupContract():")
+  log(`- Calling makeAccount(makeUniqueId(${CONTRACT_ID}))`)
+  log("- Calling deployContract(account)")
+  log("- Calling customizeContract(account, config)")
+  log("- Calling initializeContract(account)")
+  log("- Returning new mock contract")
+  return {
+    contractId: "FAKE_CONTRACT",
+    totalSupply: () => Promise.resolve(config.supply),
+  }
 }
-
-const makeUniqueId = id => `${id}-${+new Date()}`
-
 export async function deployAndSetupContract(config) {
   // FIXME: creating new accounts fails on TESTNET when Funnel account "test"
   // doesn't have enough NEAR tokens :(
@@ -38,21 +55,64 @@ export async function deployAndSetupContract(config) {
   return baseContract
 }
 
-export async function makeAccountWithContract(id) {
+export function mockMakeAccountWithContract(id, contractId) {
+  log("IN mockMakeAccountWithContract():")
+  log(`- Calling makeAccount(makeUniqueId(${id}))`)
+  log("- Calling getContract(contractId, account.accountId)")
+  log("- Returning mock { account, contract }")
+  return {
+    account: {
+      accountId: id,
+    },
+    contract: {
+      contractId: `${id}-${contractId}`,
+    },
+  }
+}
+export async function makeAccountWithContract(id, contractId) {
   const account = await makeAccount(makeUniqueId(id))
-  const contract = await getContract(account.accountId)
+  const contract = await getContract(contractId, account.accountId)
 
   return { account, contract }
 }
 
+export function mockTransfer(contract, { to, amount }) {
+  log("IN mockTransfer():")
+  log(`- Calling transfer({ to: "${to}", value: "${amount}" })`)
+  log(`  Using sender: "${contract.contractId}"`)
+}
+export async function transfer(contract, { to, amount }) {
+  const transferParams = { to, value: _.toString(amount) }
+  return await contract.transfer(transferParams)
+}
+
+export function mockTransferFrom(contract, { from, to, value }) {
+  log("IN mockTransferFrom():")
+  log(`- Calling transferFrom({ from: "${from}", to: "${to}", value: "${value}" })`)
+  log(`  Using sender: "${contract.contractId}"`)
+}
+export async function transferFrom(contract, { from, to, value }) {}
+
+export function mockApprove(contract, { spender, value }) {
+  log("IN mockApprove():")
+  log(`- Approving "${spender}" to with allowance "${value}"`)
+  log(`  Using sender: "${contract.contractId}"`)
+}
+export async function approve(contract, { spender, value }) {}
+
+export async function allowance(contract, { owner, spender }) {}
+
 export async function makeAccount(accountId) {
-  console.info(`Making account with id: ${accountId}...`)
+  log(`Making account with id: ${accountId}...`)
   const keyPair = nearlib.utils.KeyPair.fromRandom("ed25519")
 
   /**
    * https://github.com/near/near-api-js/blob/master/src.ts/near.ts#L41
    */
-  const account = await window.near.createAccount(accountId, keyPair.getPublicKey())
+  const account = await window.near.createAccount(
+    accountId,
+    keyPair.getPublicKey()
+  )
 
   await window.near.connection.signer.keyStore.setKey(
     window.near.config.networkId,
@@ -60,7 +120,7 @@ export async function makeAccount(accountId) {
     keyPair
   )
 
-  console.info(`Account created! [${accountId}]`)
+  log(`Account created! [${accountId}]`)
   return account
 }
 
@@ -118,18 +178,3 @@ export async function getContract(contractAccountId, senderAccountId) {
     sender: senderAccountId || window.wallet.getAccountId(),
   })
 }
-
-export async function balanceOf(contract, { owner }) {
-  return await contract.balanceOf({ owner })
-}
-
-export async function transfer(contract, { to, amount }) {
-  const transferParams = { to, value: _.toString(amount) }
-  return await contract.transfer(transferParams)
-}
-
-export async function transferFrom(contract, { from, to, value }) {}
-
-export async function approve(contract, { spender, value }) {}
-
-export async function allowance(contract, { owner, spender }) {}
