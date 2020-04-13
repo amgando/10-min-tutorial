@@ -57,6 +57,7 @@ export default class TokenDemo extends React.Component {
       isDeploying: false,
     }
     this.nextStep = this.nextStep.bind(this)
+    this.tokenDecimalizer = this.tokenDecimalizer.bind(this)
     this.saveToken = this.saveToken.bind(this)
     this.deployToken = this.deployToken.bind(this)
     this.transfer = this.transfer.bind(this)
@@ -69,9 +70,9 @@ export default class TokenDemo extends React.Component {
     return activeIndex
   }
 
-  get totalTokenSupply() {
+  tokenDecimalizer(amt) {
     const { token } = this.state
-    return decimalize(token.supply, token.decimals)
+    return decimalize(amt, token.decimals)
   }
 
   nextStep(delay = STEP_TRANSITION_DURATION) {
@@ -205,6 +206,7 @@ export default class TokenDemo extends React.Component {
       <AllocateTokens
         token={this.state.token}
         accounts={this.state.accounts}
+        toDecimal={this.tokenDecimalizer}
         onTransfer={this.transfer}
         onContinue={this.nextStep}
       />,
@@ -212,6 +214,7 @@ export default class TokenDemo extends React.Component {
       <TransferTokens
         token={this.state.token}
         accounts={this.state.accounts}
+        toDecimal={this.tokenDecimalizer}
         onTransfer={this.transfer}
         onContinue={this.nextStep}
       />,
@@ -219,6 +222,7 @@ export default class TokenDemo extends React.Component {
       <AllowanceTransfers
         token={this.state.token}
         accounts={this.state.accounts}
+        toDecimal={this.tokenDecimalizer}
         onApproval={this.approve}
         onSpend={this.spendAllowance}
       />,
@@ -249,7 +253,7 @@ export default class TokenDemo extends React.Component {
                   animation="scale"
                   duration={500}
                 >
-                  <SavedTokenHeader token={this.state.token} />
+                  <SavedTokenHeader token={this.state.token} toDecimal={this.tokenDecimalizer} />
                 </Transition>
                 <Transition.Group
                   animation="fade"

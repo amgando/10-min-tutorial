@@ -3,9 +3,15 @@ import { Grid, Header, Form, Input, Button, Icon } from "semantic-ui-react"
 
 import AccountCard from "../account-card"
 
-const AllocateTokens = ({ token, accounts, onTransfer, onContinue }) => {
+const AllocateTokens = ({
+  token,
+  accounts,
+  toDecimal,
+  onTransfer,
+  onContinue,
+}) => {
   const { bank, alice } = accounts
-  const [amount, setAmount] = useState(100)
+  const [amount, setAmount] = useState(Math.round(token.supply / 4))
   const [canContinue, setCanContinue] = useState(false)
 
   const handleAllocate = () => {
@@ -15,7 +21,7 @@ const AllocateTokens = ({ token, accounts, onTransfer, onContinue }) => {
       amount: Number(amount),
     })
 
-    if (alice.balance >= 100) setCanContinue(true)
+    setCanContinue(true)
   }
 
   return (
@@ -26,7 +32,7 @@ const AllocateTokens = ({ token, accounts, onTransfer, onContinue }) => {
             <Header.Content>
               Accounts
               <Header.Subheader>
-                Move at least 200 {token.symbol} to {alice.name}
+                Move {token.symbol} to {alice.name}
               </Header.Subheader>
             </Header.Content>
           </Header>
@@ -34,7 +40,7 @@ const AllocateTokens = ({ token, accounts, onTransfer, onContinue }) => {
       </Grid.Row>
       <Grid.Row>
         <Grid.Column width={6}>
-          <AccountCard {...bank} />
+          <AccountCard {...bank} toDecimal={toDecimal} />
         </Grid.Column>
         <Grid.Column width={4}>
           <Form onSubmit={handleAllocate}>
@@ -55,7 +61,7 @@ const AllocateTokens = ({ token, accounts, onTransfer, onContinue }) => {
           </Form>
         </Grid.Column>
         <Grid.Column width={6}>
-          <AccountCard {...alice} />
+          <AccountCard {...alice} toDecimal={toDecimal} />
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>

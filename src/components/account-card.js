@@ -7,7 +7,7 @@ const iconForType = type =>
     person: "user circle outline",
   }[type])
 
-const AccountCard = ({ id, name, balance, type }) => {
+const AccountCard = ({ id, name, balance, type, toDecimal }) => {
   const [toggled, setToggled] = useState(true)
   const toggle = () => setToggled(!toggled)
 
@@ -19,7 +19,7 @@ const AccountCard = ({ id, name, balance, type }) => {
         <Transition animation="glow" visible={toggled}>
           <Card.Header>
             <Icon name="dot circle outline" />
-            {balance}
+            {toDecimal(balance)}
           </Card.Header>
         </Transition>
         <Card.Meta>{name}<br />@{id}</Card.Meta>

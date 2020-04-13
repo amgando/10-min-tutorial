@@ -11,7 +11,13 @@ import {
 
 import AccountCard from "../account-card"
 
-const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
+const AllowanceTransfers = ({
+  token,
+  accounts,
+  toDecimal,
+  onApproval,
+  onSpend,
+}) => {
   const { alice: owner, bob: spender, carol: receiver } = accounts
   const [allowance, setAllowance] = useState(null)
   const [allowanceChangeEvents, setAllowanceChangeEvents] = useState([])
@@ -25,15 +31,12 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
     const { spender, owner, amount } = allowance
     setAllowanceChangeEvents([
       ...allowanceChangeEvents,
-      `@${spender} is approved by @${owner} to xfer ${amount}`
+      `@${spender} is approved by @${owner} to xfer ${amount}`,
     ])
   }
 
-  const listError = (error) => {
-    setAllowanceChangeEvents([
-      ...allowanceChangeEvents,
-      error.message,
-    ])
+  const listError = error => {
+    setAllowanceChangeEvents([...allowanceChangeEvents, error.message])
   }
 
   useEffect(registerAllowanceChange, [allowance])
@@ -60,7 +63,7 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
 
     try {
       if (transferAmount > allowance.amount) {
-        throw new Error('Cannot transfer more than allowed.')
+        throw new Error("Cannot transfer more than allowed.")
       }
 
       onSpend({
@@ -69,6 +72,10 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
         to: receiver.id,
         amount: Number(transferAmount),
       })
+      setAllowanceChangeEvents([
+        ...allowanceChangeEvents,
+        `@${spender.id} transferred ${transferAmount} from @${owner.id} to ${receiver.id}`,
+      ])
       setAllowance({
         ...allowance,
         amount: allowance.amount - Number(transferAmount),
@@ -97,16 +104,16 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
           <Grid>
             <Grid.Row>
               <Grid.Column width={8}>
-                <AccountCard {...owner} />
+                <AccountCard {...owner} toDecimal={toDecimal} />
               </Grid.Column>
               <Grid.Column width={8}>
-                <AccountCard {...spender} />
+                <AccountCard {...spender} toDecimal={toDecimal} />
               </Grid.Column>
             </Grid.Row>
           </Grid>
         </Grid.Column>
         <Grid.Column width={8}>
-          <AccountCard {...receiver} />
+          <AccountCard {...receiver} toDecimal={toDecimal} />
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
@@ -116,11 +123,9 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
               <Grid.Column>
                 <Header as="h4">Approvals</Header>
                 <List>
-                  {allowanceChangeEvents.map((message, index) =>
-                    <List.Item key={index}>
-                      {message}
-                    </List.Item>
-                  )}
+                  {allowanceChangeEvents.map((message, index) => (
+                    <List.Item key={index}>{message}</List.Item>
+                  ))}
                 </List>
               </Grid.Column>
             </Grid.Row>

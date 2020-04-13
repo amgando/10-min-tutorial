@@ -6,8 +6,7 @@ import {
   Segment,
 } from "semantic-ui-react"
 
-
-const SavedTokenHeader = ({ token }) => (
+const SavedTokenHeader = ({ token, toDecimal }) => (
   <Segment inverted>
     <Header as="h2" inverted color="grey">
       {token.deployed && (
@@ -19,7 +18,7 @@ const SavedTokenHeader = ({ token }) => (
       <Header.Content>
         {token.name}
         <Header.Subheader>
-          [{token.symbol}]: {token.supply}
+          [{token.symbol}]: {toDecimal(token.supply)}
         </Header.Subheader>
       </Header.Content>
     </Header>

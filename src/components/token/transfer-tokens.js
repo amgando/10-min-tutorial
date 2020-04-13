@@ -3,7 +3,13 @@ import { Grid, Header, Form, Input, Button, Icon } from "semantic-ui-react"
 
 import AccountCard from "../account-card"
 
-const TransferTokens = ({ token, accounts, onTransfer, onContinue }) => {
+const TransferTokens = ({
+  token,
+  accounts,
+  toDecimal,
+  onTransfer,
+  onContinue,
+}) => {
   const { alice, bob } = accounts
   const [amount, setAmount] = useState(100)
   const [canContinue, setCanContinue] = useState(false)
@@ -33,7 +39,7 @@ const TransferTokens = ({ token, accounts, onTransfer, onContinue }) => {
       </Grid.Row>
       <Grid.Row>
         <Grid.Column width={6}>
-          <AccountCard {...alice} />
+          <AccountCard {...alice} toDecimal={toDecimal} />
         </Grid.Column>
         <Grid.Column width={4}>
           <Form onSubmit={handleTransfer}>
@@ -54,7 +60,7 @@ const TransferTokens = ({ token, accounts, onTransfer, onContinue }) => {
           </Form>
         </Grid.Column>
         <Grid.Column width={6}>
-          <AccountCard {...bob} />
+          <AccountCard {...bob} toDecimal={toDecimal} />
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
