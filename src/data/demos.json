@@ -1,0 +1,82 @@
+{
+  "token": {
+    "id": "token",
+    "ready": true,
+    "title": "Exploring ERC-20 Tokens",
+    "shortDesc": "Learn to build a fungible token using NEAR Protocol.",
+    "longDesc": "We briefly touch on both ERC-20 and ERC-721 before implementing a demo application that lets you issue and interact with your own ERC-20 token.",
+    "links": {
+      "slides": "https://docs.google.com/presentation/d/13gjojRbZmPg5RexTzXUBMP8mfc26mOmijx1H54mOOxM",
+      "demo": "token",
+      "code": "github.com/near-examples/10-min-token"
+    },
+    "icons": [
+      { "icon": "html5", "text": "HTML" },
+      { "icon": "css3", "text": "CSS" },
+      { "icon": "javascript", "text": "JavaScript" },
+      { "icon": "webassembly", "text": "AssemblyScript" }
+    ],
+    "steps": [
+      {
+        "icon": "puzzle piece",
+        "title": "Design the Token",
+        "description": "Configure token parameters"
+      },
+      {
+        "icon": "upload",
+        "title": "Deploy the Token",
+        "description": "Publish to the blockchain"
+      },
+      {
+        "icon": "money bill alternate",
+        "title": "Allocate Tokens",
+        "description": "Distribute to user accounts"
+      },
+      {
+        "icon": "exchange",
+        "title": "Transfer Tokens",
+        "description": "Move between accounts"
+      },
+      {
+        "icon": "unlock alternate",
+        "title": "Transfer Allowances",
+        "description": "Authorize third party for transfer"
+      }
+    ]
+  },
+  "dapp": {
+    "id": "dapp",
+    "ready": false,
+    "title": "Exploring a Simple Web-based dApp",
+    "shortDesc": "Learn to build a simple distributed application using NEAR Protocol.",
+    "longDesc": "We explore a simple dApp modeled after one of hackathon submissions. This dApp let's you make a public promise (a statement or commitment) to someone which they later mark as fulfilled.",
+    "links": {
+      "slides": "https://docs.google.com/presentation/d/1KOJwtOJRn4cFHuTVIcj4vlH-i-htqaw3A-RTgw38WRo",
+      "demo": "dapp",
+      "code": "github.com/near-examples/10-min-dapp"
+    },
+    "icons": [
+      { "icon": "html5", "text": "HTML" },
+      { "icon": "css3", "text": "CSS" },
+      { "icon": "javascript", "text": "JavaScript" },
+      { "icon": "rust", "text": "Rust" }
+    ]
+  },
+  "bridge": {
+    "id": "bridge",
+    "ready": false,
+    "title": "Exploring The NEAR-Ethereum Bridge",
+    "shortDesc": "Learn to work with the NEAR-Ethereum bridge.",
+    "longDesc": "We review the architecture of the bridge and discuss specific use cases and extension points that you can leverage for your own requirements.",
+    "links": {
+      "slides": "https://docs.google.com/presentation/d/1bZFeyJx1JzfGsh8RH9gFnbdB2RRy--5Z6Af5gNIUuIs",
+      "demo": "bridge",
+      "code": "github.com/near-examples/10-min-bridge"
+    },
+    "icons": [
+      { "icon": "node", "text": "Node" },
+      { "icon": "rust", "text": "Rust" },
+      { "icon": "ethereum", "text": "Solidity" }
+    ]
+  }
+}

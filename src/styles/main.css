@@ -27,11 +27,6 @@ body {
   display: none;
 }
 
-.masthead.segment {
-  min-height: 700px;
-  padding: 1em 0em;
-}
-
 .masthead .logo.item img {
   margin-right: 1em;
 }
@@ -41,7 +36,7 @@ body {
 }
 
 .masthead h1.ui.header {
-  margin-top: 3em;
+  margin-top: 2.5em;
   margin-bottom: 0em;
   font-size: 4em;
   font-weight: normal;
