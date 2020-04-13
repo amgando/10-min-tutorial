@@ -150,6 +150,11 @@ export default class TokenDemo extends React.Component {
   async transfer({ from, to, amount }) {
     const { accounts } = this.state
     const contract = accounts[from].nearContract
+    const fromBalance = accounts[from].balance
+
+    if (amount > fromBalance) {
+      return alert(`Insufficient balance. Cannot transfer ${amount} from ${from}.`)
+    }
 
     // TODO: re-enable actual transfer
     mockTransfer(contract, { to, amount })
@@ -164,6 +169,11 @@ export default class TokenDemo extends React.Component {
   approve({ owner, spender, amount }) {
     const { accounts } = this.state
     const contract = accounts[owner].nearContract
+    const ownerBalance = accounts[owner].balance
+
+    if (amount > ownerBalance) {
+      throw new Error(`Cannot approve allowance (${amount}) greater than balance (${ownerBalance})`)
+    }
 
     // TODO: use NEAR RPC call and reflect actual state change
     mockApprove(contract, { spender, value: amount })

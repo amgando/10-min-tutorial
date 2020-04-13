@@ -22,12 +22,17 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
 
   const registerAllowanceChange = () => {
     if (allowance === null) return
+    const { spender, owner, amount } = allowance
     setAllowanceChangeEvents([
       ...allowanceChangeEvents,
-      {
-        ...allowance,
-        remaining: allowance.amount,
-      }
+      `@${spender} is approved by @${owner} to xfer ${amount}`
+    ])
+  }
+
+  const listError = (error) => {
+    setAllowanceChangeEvents([
+      ...allowanceChangeEvents,
+      error.message,
     ])
   }
 
@@ -39,24 +44,38 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
       spender: spender.id,
       amount: Number(allowanceAmount),
     }
-    setAllowance(allowance)
-    setCanAllow(false)
-    setCanSpend(true)
-    onApproval(allowance)
+
+    try {
+      onApproval(allowance)
+      setAllowance(allowance)
+      setCanAllow(false)
+      setCanSpend(true)
+    } catch (error) {
+      listError(error)
+    }
   }
 
   const handleSpend = () => {
     // TODO: make the allowance amount reflect actual state
-    setAllowance({
-      ...allowance,
-      amount: allowance.amount - Number(transferAmount),
-    })
-    onSpend({
-      spender: spender.id,
-      from: owner.id,
-      to: receiver.id,
-      amount: Number(transferAmount),
-    })
+
+    try {
+      if (transferAmount > allowance.amount) {
+        throw new Error('Cannot transfer more than allowed.')
+      }
+
+      onSpend({
+        spender: spender.id,
+        from: owner.id,
+        to: receiver.id,
+        amount: Number(transferAmount),
+      })
+      setAllowance({
+        ...allowance,
+        amount: allowance.amount - Number(transferAmount),
+      })
+    } catch (error) {
+      listError(error)
+    }
   }
 
   return (
@@ -97,9 +116,9 @@ const AllowanceTransfers = ({ token, accounts, onApproval, onSpend }) => {
               <Grid.Column>
                 <Header as="h4">Approvals</Header>
                 <List>
-                  {allowanceChangeEvents.map((alw, index) =>
+                  {allowanceChangeEvents.map((message, index) =>
                     <List.Item key={index}>
-                      {alw.spender} is approved by {alw.owner} to xfer {alw.remaining}
+                      {message}
                     </List.Item>
                   )}
                 </List>
